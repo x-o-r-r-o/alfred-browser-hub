@@ -196,7 +196,7 @@ function listDir(dir) {
   return names.isNil() ? [] : ObjC.deepUnwrap(names);
 }
 function now() {
-  const t = env("BH_TEST_NOW", "");
+  const t = isTest() ? env("BH_TEST_NOW", "") : "";
   if (t && !isNaN(Number(t))) return Number(t);
   return Date.now() / 1000;
 }
@@ -411,17 +411,14 @@ function displayURL(u) {
   if (/^[^/]+\/$/.test(s)) s = s.slice(0, -1);
   return s;
 }
-function hostOf(u) {
-  const m = /^[a-z][a-z0-9+.-]*:\/\/(?:[^@/?#]*@)?([^/?#:]+)/i.exec(u);
-  return m ? m[1].toLowerCase().replace(/^www\./, "") : "";
-}
 // A URL typed or copied: http(s) and other scheme URLs, or a bare domain like "example.com/x"
 function asURL(s) {
   s = String(s || "").trim();
   if (!s || /[\s\x00-\x1f]/.test(s) || s.length > MAX_URL) return "";
   if (/^[a-z][a-z0-9+.-]*:\/\/\S+$/i.test(s)) return indexable(s) ? s : "";
   if (/^(mailto|tel):\S+$/i.test(s)) return "";
-  if (/^(localhost|[\p{L}\p{N}-]+(\.[\p{L}\p{N}-]+)*\.\p{L}{2,})(:\d+)?([/?#]\S*)?$/iu.test(s)) return "https://" + s;
+  if (/^localhost(:\d+)?([/?#]\S*)?$/i.test(s)) return "http://" + s;
+  if (/^[\p{L}\p{N}-]+(\.[\p{L}\p{N}-]+)*\.\p{L}{2,}(:\d+)?([/?#]\S*)?$/iu.test(s)) return "https://" + s;
   return "";
 }
 
@@ -606,8 +603,8 @@ function cleanTmp() {
 // Copies left behind by a killed indexer
 function pruneTmp() {
   for (const name of listDir(cacheDir())) {
-    const m = /^tmp-(\d+)-\d+$/.exec(name);
-    if (m && Number(m[1]) !== PID && now() - mtime(`${cacheDir()}/${name}`) > 600) removeFile(`${cacheDir()}/${name}`);
+    const m = /^(?:tmp-(\d+)-\d+|index\.tmp-(\d+)\.(?:sql|sqlite))$/.exec(name);
+    if (m && Number(m[1] || m[2]) !== PID && now() - mtime(`${cacheDir()}/${name}`) > 600) removeFile(`${cacheDir()}/${name}`);
   }
 }
 
@@ -703,9 +700,10 @@ function chromiumHistory(path, limit) {
 
 // Firefox (and Zen, LibreWolf, Floorp…): bookmarks and history both live in places.sqlite
 const FF_ROOTS = "CASE guid WHEN 'toolbar_____' THEN 'Bookmarks Toolbar' WHEN 'menu________' THEN 'Bookmarks Menu' WHEN 'unfiled_____' THEN 'Other Bookmarks' WHEN 'mobile______' THEN 'Mobile Bookmarks' ELSE coalesce(title, '') END";
-const FF_BOOKMARKS_SQL = `WITH RECURSIVE tree(id, path) AS (
-  SELECT id, ${FF_ROOTS} FROM moz_bookmarks WHERE parent = (SELECT id FROM moz_bookmarks WHERE guid = 'root________') AND guid <> 'tags________'
-  UNION ALL SELECT b.id, tree.path || '/' || coalesce(b.title, '') FROM moz_bookmarks b JOIN tree ON b.parent = tree.id WHERE b.type = 2)
+// (depth-limited: a damaged database with a folder loop can't make it run forever)
+const FF_BOOKMARKS_SQL = `WITH RECURSIVE tree(id, path, depth) AS (
+  SELECT id, ${FF_ROOTS}, 0 FROM moz_bookmarks WHERE parent = (SELECT id FROM moz_bookmarks WHERE guid = 'root________') AND guid <> 'tags________'
+  UNION ALL SELECT b.id, tree.path || '/' || coalesce(b.title, ''), tree.depth + 1 FROM moz_bookmarks b JOIN tree ON b.parent = tree.id WHERE b.type = 2 AND tree.depth < 32)
 SELECT p.url AS u, b.title AS t, tree.path AS f, p.visit_count AS v, p.last_visit_date AS l
 FROM moz_bookmarks b JOIN tree ON b.parent = tree.id JOIN moz_places p ON p.id = b.fk WHERE b.type = 1 LIMIT ${MAX_BOOKMARKS}`;
 const FF_HISTORY_SQL = (limit) => `SELECT url AS u, title AS t, visit_count AS v, last_visit_date AS l FROM moz_places WHERE hidden = 0 AND visit_count > 0 AND last_visit_date IS NOT NULL ORDER BY last_visit_date DESC LIMIT ${limit}`;
@@ -1024,7 +1022,7 @@ function parseQuery(q) {
   const last = /(^|\s)@(\S*)$/.exec(String(q || ""));
   const typingFilter = last ? squash(last[2]) : null;
   const finished = filters.slice(0, last && last[2] ? -1 : filters.length).filter(Boolean);
-  return { words, filters: filters.filter(Boolean), finished, typingFilter };
+  return { words: [...new Set(words)].slice(0, 12), filters: filters.filter(Boolean), finished, typingFilter };
 }
 // State sources, enriched with their browser, label and the matching result
 function stateSources(state) {
@@ -1036,7 +1034,14 @@ function stateSources(state) {
 }
 function matchesFilter(s, f) {
   const b = s.browser;
-  return b.id.startsWith(f) || squash(b.name).startsWith(f) || squash(b.short).startsWith(f) || squash(s.name).startsWith(f);
+  return b.id.startsWith(f) || squash(b.name).startsWith(f) || squash(b.short).startsWith(f) || profileMatches(s, f);
+}
+function profileMatches(s, f) {
+  return !!s.name && (squash(s.name).startsWith(f) || (!!s.profileId && squash(s.profileId).startsWith(f)));
+}
+// "@work": the profile's name as a filter (its folder name when the name has no letters or digits)
+function profileToken(s) {
+  return squash(s.name) || squash(s.profileId || "") || "default";
 }
 
 function searchSQL(words, allowed, kind, limit) {
@@ -1141,17 +1146,20 @@ function searchItems(query, kind) {
   for (const f of q.filters) pool = pool.filter((s) => matchesFilter(s, f));
   // "@…" being typed: suggest browsers and profiles (unless it already names one exactly)
   const tf = q.typingFilter;
-  const exact = tf && srcs.some((s) => s.browser.id === tf || squash(s.browser.short) === tf || (s.multi && squash(s.name) === tf));
+  const exact = tf && srcs.some((s) => s.browser.id === tf || squash(s.browser.short) === tf || (s.multi && profileToken(s) === tf));
   if (tf !== null && !exact) {
     const prefix = String(query).replace(/(^|\s)@\S*$/, "$1");
     const seen = new Set();
     const sugg = [];
+    const browserOnly = (s) => Object.assign({}, s, { name: "", profileId: "" });
     for (const s of srcs.filter((x) => q.finished.every((f) => matchesFilter(x, f)))) {
-      const cands = [[s.browser.id, s.browser.name, null]];
-      if (s.multi) cands.push([`${s.browser.id} @${squash(s.name)}`, `${s.browser.short} · ${s.name}`, s]);
+      // a browser already named by a finished filter: suggest only its profiles
+      const named = q.finished.some((f) => matchesFilter(browserOnly(s), f));
+      const cands = named ? [] : [[s.browser.id, s.browser.name, null]];
+      if (s.multi) cands.push([named ? profileToken(s) : `${s.browser.id} @${profileToken(s)}`, `${s.browser.short} · ${s.name}`, s]);
       for (const [tok, label, prof] of cands) {
         if (seen.has(tok)) continue;
-        const ok = !q.typingFilter || (prof ? matchesFilter(s, q.typingFilter) : matchesFilter(Object.assign({}, s, { name: "" }), q.typingFilter));
+        const ok = !q.typingFilter || (prof ? matchesFilter(s, q.typingFilter) : matchesFilter(browserOnly(s), q.typingFilter));
         if (!ok) continue;
         seen.add(tok);
         sugg.push(info(label, prof ? `Only ${s.browser.short}’s “${s.name}” profile` : `Only ${s.browser.name}`, "filter",
@@ -1313,7 +1321,9 @@ function openInItems(query) {
     if (profs.length > 1) for (const p of profs) rows.push({ b, inst, prof: p, isDef: false });
   }
   rows.sort((x, y) => (y.isDef ? 1 : 0) - (x.isDef ? 1 : 0));
-  const shown = rows.filter((r) => matchesWords([r.b.name, r.b.short, r.prof ? r.prof.name : "", r.prof ? r.prof.email : ""], words));
+  let shown = rows.filter((r) => matchesWords([r.b.name, r.b.short, r.prof ? r.prof.name : "", r.prof ? r.prof.email : ""], words));
+  // text selected around a link ("see https://… today") isn't a filter
+  if (!shown.length && typed) shown = rows;
   const items = [];
   if (url) items.push(info(`Open ${shorten(displayURL(url), 60)} in…`, from || "The typed link", "link", { quicklookurl: url }));
   else items.push(info("No link to open", "Type or copy a URL, or use the Universal Action on a link; ↩ below opens the browser", "link"));
@@ -1365,7 +1375,7 @@ function browserItems(query) {
     } else {
       const errs = [st.bs, st.hs].filter((x) => x && x !== "ok" && x !== "noaccess");
       sub = `${plural(st.b, "bookmark", "bookmarks")}${state.history ? ` · ${plural(st.h, "history page", "history pages")}` : ""}` + (errs.length ? ` · ${errs[0]}` : "");
-      const tok = s.multi ? `@${s.browser.id} @${squash(s.name)} ` : `@${s.browser.id} `;
+      const tok = s.multi ? `@${s.browser.id} @${profileToken(s)} ` : `@${s.browser.id} `;
       extra = { valid: true, arg: `${kw} ${tok}`, variables: { bh_action: "search" } };
       sub += " · ↩ Search it";
     }

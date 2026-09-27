@@ -790,6 +790,57 @@ class BrowsersTests(Base):
         return out or None
 
 
+class Audit1Tests(Base):
+    """Regression tests for the first audit"""
+
+    def test_selected_text_around_a_link(self):
+        items = self.items("openin", "see https://example.com/x today", index=False)
+        self.assertEqual(items[0]["title"], "Open example.com/x in…")
+        self.assertIn("Google Chrome", [i["title"] for i in items])
+
+    def test_localhost_is_http(self):
+        items = self.items("openin", "localhost:3000/app", index=False)
+        self.assertEqual(self.find(items, "Safari")["arg"], "http://localhost:3000/app")
+
+    def test_killed_build_leftovers_are_pruned(self):
+        for name in ("index.tmp-99999.sql", "index.tmp-99999.sqlite"):
+            write(os.path.join(self.cache, name), "private")
+            os.utime(os.path.join(self.cache, name), (NOW - 4000, NOW - 4000))
+        self.index()
+        self.assertFalse([f for f in self.cache_files() if f.startswith("index.tmp")])
+
+    def test_firefox_folder_loop(self):
+        path = self.A("Firefox", "Profiles", "xyz.default", "places.sqlite")
+        db = sqlite3.connect(path)
+        db.execute("INSERT INTO moz_bookmarks(id, type, fk, parent, title, guid) VALUES(50, 2, NULL, 51, 'Loop A', 'loopa'), (51, 2, NULL, 50, 'Loop B', 'loopb')")
+        db.execute("INSERT INTO moz_bookmarks(id, type, fk, parent, title, guid) VALUES(52, 2, NULL, 3, 'Deep', 'deep0')")
+        for i in range(53, 93):
+            db.execute("INSERT INTO moz_bookmarks(id, type, fk, parent, title, guid) VALUES(?, 2, NULL, ?, 'D', ?)", (i, i - 1, "d%d" % i))
+        db.execute("INSERT INTO moz_bookmarks(id, type, fk, parent, title, guid) VALUES(99, 1, 1, 60, 'Deep Bookmark', 'deepbm')")
+        db.commit()
+        db.close()
+        t0 = time.time()
+        self.assertIn("Deep Bookmark", self.titles("web", "deep bookmark"))
+        self.assertLess(time.time() - t0, 30)
+
+    def test_suggestions_dont_repeat_the_browser(self):
+        items = self.items("web", "@chrome @")
+        self.assertEqual([i["title"] for i in items], ["Chrome · Personal", "Chrome · Work"])
+        self.assertEqual(items[1]["autocomplete"], "@chrome @work ")
+
+    def test_profile_name_without_letters(self):
+        c = self.A("Google", "Chrome", "Local State")
+        write(c, json.dumps({"profile": {"info_cache": {"Default": {"name": "😀"}, "Profile 1": {"name": "Work"}}}}))
+        items = self.items("web", "@chrome @")
+        it = self.find(items, "Chrome · 😀")
+        self.assertEqual(it["autocomplete"], "@chrome @default ")
+        self.assertIn("Python Docs", self.titles("web", "@chrome @default python"))
+
+    def test_long_query(self):
+        q = " ".join("word%d" % i for i in range(400))
+        self.assertTrue(self.titles("web", q)[0].startswith("No bookmarks or history match"))
+
+
 class RuntimeTests(Base):
     def test_bare_alfred_environment(self):
         """Alfred's runtime: no LANG, bare PATH, cache path with spaces and quotes, fresh install"""
