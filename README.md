@@ -8,7 +8,7 @@ Safari keeps its bookmarks and history in a protected folder. To include Safari,
 
 ## Usage
 
-Search bookmarks and history of all your browsers via the `web` keyword. Chrome (every channel), Arc, Brave, Edge, Vivaldi, Opera, Dia, Comet, Helium, Firefox, Zen, LibreWolf, Floorp, Waterfox and Safari are found automatically, with all their profiles. A page saved or visited in several browsers appears once, with bookmarks ranked first. Leave the query empty to see what you visited last. Configure the Hotkey to search without typing the keyword.
+Search bookmarks and history of all your browsers via the `web` keyword. Chrome (every channel), Arc (pinned tabs and Favorites), Brave, Edge, Vivaldi, Opera, Dia, Comet, Helium, ChatGPT Atlas, Firefox, Zen, LibreWolf, Floorp, Waterfox and Safari are found automatically, with all their profiles, including bookmarks saved to your Google Account and Safari profiles. A page saved or visited in several browsers appears once, with bookmarks ranked first. Leave the query empty to see what you visited last. Configure the Hotkey to search without typing the keyword.
 
 ![Searching bookmarks and history](images/web.png)
 
@@ -25,7 +25,7 @@ Type `@` to narrow the search to one browser or profile, like `web @chrome @work
 
 ### Profiles
 
-List every Chrome, Arc, Brave, Edge, Vivaldi, Firefox, Zen and other profile via the `prof` keyword, with its name, account and picture. Type a URL after the name, or copy one first, to open it in a profile.
+List every Chrome, Brave, Edge, Vivaldi, Firefox, Zen and other profile via the `prof` keyword, with its name, account and picture. Type a URL after the name, or copy one first, to open it in a profile.
 
 ![Browser profiles](images/prof.png)
 

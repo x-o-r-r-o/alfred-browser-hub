@@ -61,6 +61,8 @@ const MAX_TITLE = 300;
 
 // ---------- browsers ----------
 // dir: data folder relative to the home folder. private: the flag for a private window.
+// profileFlag: false when the browser has no command-line flag for a profile (Arc ties profiles to
+// spaces; Opera uses side profiles, and --profile-directory is reported to hang it)
 
 const AS = "Library/Application Support/";
 const BROWSERS = [
@@ -69,7 +71,7 @@ const BROWSERS = [
   { id: "chromedev", name: "Google Chrome Dev", short: "Chrome Dev", family: "chromium", bundles: ["com.google.Chrome.dev"], dir: AS + "Google/Chrome Dev", private: "--incognito" },
   { id: "chromecanary", name: "Google Chrome Canary", short: "Chrome Canary", family: "chromium", bundles: ["com.google.Chrome.canary"], dir: AS + "Google/Chrome Canary", private: "--incognito" },
   { id: "chromium", name: "Chromium", short: "Chromium", family: "chromium", bundles: ["org.chromium.Chromium"], dir: AS + "Chromium", private: "--incognito" },
-  { id: "arc", name: "Arc", short: "Arc", family: "chromium", bundles: ["company.thebrowser.Browser"], dir: AS + "Arc/User Data", private: null },
+  { id: "arc", name: "Arc", short: "Arc", family: "chromium", bundles: ["company.thebrowser.Browser"], dir: AS + "Arc/User Data", private: null, profileFlag: false },
   { id: "brave", name: "Brave Browser", short: "Brave", family: "chromium", bundles: ["com.brave.Browser"], dir: AS + "BraveSoftware/Brave-Browser", private: "--incognito" },
   { id: "bravebeta", name: "Brave Browser Beta", short: "Brave Beta", family: "chromium", bundles: ["com.brave.Browser.beta"], dir: AS + "BraveSoftware/Brave-Browser-Beta", private: "--incognito" },
   { id: "bravenightly", name: "Brave Browser Nightly", short: "Brave Nightly", family: "chromium", bundles: ["com.brave.Browser.nightly"], dir: AS + "BraveSoftware/Brave-Browser-Nightly", private: "--incognito" },
@@ -78,14 +80,15 @@ const BROWSERS = [
   { id: "edgedev", name: "Microsoft Edge Dev", short: "Edge Dev", family: "chromium", bundles: ["com.microsoft.edgemac.Dev"], dir: AS + "Microsoft Edge Dev", private: "--inprivate" },
   { id: "edgecanary", name: "Microsoft Edge Canary", short: "Edge Canary", family: "chromium", bundles: ["com.microsoft.edgemac.Canary"], dir: AS + "Microsoft Edge Canary", private: "--inprivate" },
   { id: "vivaldi", name: "Vivaldi", short: "Vivaldi", family: "chromium", bundles: ["com.vivaldi.Vivaldi"], dir: AS + "Vivaldi", private: "--incognito" },
-  { id: "opera", name: "Opera", short: "Opera", family: "chromium", bundles: ["com.operasoftware.Opera"], dir: AS + "com.operasoftware.Opera", private: "--private" },
-  { id: "operagx", name: "Opera GX", short: "Opera GX", family: "chromium", bundles: ["com.operasoftware.OperaGX"], dir: AS + "com.operasoftware.OperaGX", private: "--private" },
+  { id: "opera", name: "Opera", short: "Opera", family: "chromium", bundles: ["com.operasoftware.Opera"], dir: AS + "com.operasoftware.Opera", private: "--private", profileFlag: false },
+  { id: "operagx", name: "Opera GX", short: "Opera GX", family: "chromium", bundles: ["com.operasoftware.OperaGX"], dir: AS + "com.operasoftware.OperaGX", private: "--private", profileFlag: false },
   { id: "dia", name: "Dia", short: "Dia", family: "chromium", bundles: ["company.thebrowser.dia"], dir: AS + "Dia/User Data", private: "--incognito" },
   { id: "comet", name: "Comet", short: "Comet", family: "chromium", bundles: ["ai.perplexity.comet"], dir: AS + "Comet", private: "--incognito" },
   { id: "helium", name: "Helium", short: "Helium", family: "chromium", bundles: ["net.imput.helium"], dir: AS + "net.imput.helium", private: "--incognito" },
+  { id: "atlas", name: "ChatGPT Atlas", short: "Atlas", family: "chromium", bundles: ["com.openai.atlas"], dir: AS + "com.openai.atlas/browser-data/host", private: "--incognito" },
   { id: "firefox", name: "Firefox", short: "Firefox", family: "firefox", bundles: ["org.mozilla.firefox", "org.mozilla.firefoxdeveloperedition", "org.mozilla.nightly"], dir: AS + "Firefox", private: "-private-window" },
   { id: "zen", name: "Zen", short: "Zen", family: "firefox", bundles: ["app.zen-browser.zen"], dir: AS + "zen", private: "-private-window" },
-  { id: "librewolf", name: "LibreWolf", short: "LibreWolf", family: "firefox", bundles: ["org.mozilla.librewolf", "io.gitlab.librewolf-community"], dir: AS + "librewolf", private: "-private-window" },
+  { id: "librewolf", name: "LibreWolf", short: "LibreWolf", family: "firefox", bundles: ["org.mozilla.librewolf", "io.gitlab.librewolf-community.librewolf", "net.librewolf.librewolf", "io.gitlab.librewolf-community"], dir: AS + "librewolf", private: "-private-window" },
   { id: "floorp", name: "Floorp", short: "Floorp", family: "firefox", bundles: ["one.ablaze.floorp", "org.mozilla.floorp"], dir: AS + "Floorp", private: "-private-window" },
   { id: "waterfox", name: "Waterfox", short: "Waterfox", family: "firefox", bundles: ["net.waterfox.waterfox"], dir: AS + "Waterfox", private: "-private-window" },
   { id: "safari", name: "Safari", short: "Safari", family: "safari", bundles: ["com.apple.Safari"], dir: "Library/Safari", private: null },
@@ -407,7 +410,7 @@ function relativeTime(t) {
 
 // Schemes that can't be opened from outside a browser, or aren't pages
 const SKIP_SCHEMES = new Set(["javascript", "place", "data", "blob", "about", "chrome", "chrome-extension", "chrome-search", "chrome-untrusted",
-  "edge", "brave", "vivaldi", "opera", "arc", "moz-extension", "view-source", "resource", "devtools", "comet", "helium", "dia"]);
+  "edge", "brave", "vivaldi", "opera", "arc", "moz-extension", "view-source", "resource", "devtools", "comet", "helium", "dia", "atlas"]);
 function schemeOf(u) {
   const m = /^([a-z][a-z0-9+.-]*):/i.exec(u);
   return m ? m[1].toLowerCase() : "";
@@ -491,7 +494,9 @@ function defaultBrowserBundle() {
 
 // ---------- profiles ----------
 // A source is one profile of one browser:
-// { key, browser, dir, profileId, name, email, avatar, isDefault, files: { bookmarks, history } }
+// { key, browser, dir, profileId, name, email, avatar, isDefault, launchable, launchPath,
+//   files: { bookmarks: [paths], history } }
+// launchable: false for profiles that can't be targeted from outside (Opera's side profiles)
 
 function chromiumProfiles(b, root) {
   const out = [];
@@ -508,27 +513,48 @@ function chromiumProfiles(b, root) {
   Object.keys(cache).forEach(add);
   // profiles Local State doesn't list (or no Local State at all)
   for (const d of listDir(root).sort()) {
-    if (/^(Default|Profile \d+)$/.test(d) && (exists(`${root}/${d}/Bookmarks`) || exists(`${root}/${d}/History`))) add(d);
+    if (/^(Default|Profile \d+)$/.test(d) && ["Bookmarks", "AccountBookmarks", "History"].some((f) => exists(`${root}/${d}/${f}`))) add(d);
   }
   dirs.sort((x, y) => (x === "Default" ? -1 : y === "Default" ? 1 : 0));
   for (const d of dirs) {
     const pdir = `${root}/${d}`;
     const info = Object.prototype.hasOwnProperty.call(cache, d) && cache[d] && typeof cache[d] === "object" ? cache[d] : {};
+    // Arc's internal profile (Raycast's Arc extension skips it too)
+    if (typeof info.name === "string" && /^__ARC_/.test(info.name)) continue;
     const avatar = ["Google Profile Picture.png", "Edge Profile Picture.png"].map((f) => `${pdir}/${f}`).find(exists) || "";
     out.push({
       browser: b, dir: pdir, profileId: d,
       name: typeof info.name === "string" && info.name.trim() ? info.name.trim() : d === "Default" ? "Default" : d,
       email: typeof info.user_name === "string" ? info.user_name : "",
       avatar, isDefault: d === "Default",
-      files: { bookmarks: `${pdir}/Bookmarks`, history: `${pdir}/History` },
+      launchable: b.profileFlag !== false, files: { bookmarks: bookmarkFiles(b, pdir), history: `${pdir}/History` },
     });
   }
-  // Opera keeps its only profile in the data folder itself
+  // Older Opera versions keep the main profile in the data folder itself
   if (!out.length && (exists(`${root}/Bookmarks`) || exists(`${root}/History`))) {
     out.push({ browser: b, dir: root, profileId: "", name: "Default", email: "", avatar: "", isDefault: true,
-      files: { bookmarks: `${root}/Bookmarks`, history: `${root}/History` } });
+      launchable: b.profileFlag !== false, files: { bookmarks: bookmarkFiles(b, root), history: `${root}/History` } });
+  }
+  // Opera's side profiles: _side_profiles/<id>/ (or …/<id>/Default/). Indexed, but like Arc's
+  // profiles they can't be opened from outside the browser, so `prof` and `openin` don't offer them.
+  if (b.id === "opera" || b.id === "operagx") {
+    let n = 0;
+    for (const id of listDir(`${root}/_side_profiles`).sort()) {
+      const base = `${root}/_side_profiles/${id}`;
+      const pdir = exists(`${base}/Default/History`) || exists(`${base}/Default/Bookmarks`) ? `${base}/Default` : base;
+      if (!exists(`${pdir}/History`) && !exists(`${pdir}/Bookmarks`)) continue;
+      out.push({ browser: b, dir: pdir, profileId: "", name: `Side profile ${++n}`, email: "", avatar: "", isDefault: false,
+        launchable: false, files: { bookmarks: bookmarkFiles(b, pdir), history: `${pdir}/History` } });
+    }
   }
   return out;
+}
+
+// Chromium keeps bookmarks synced to the Google Account in AccountBookmarks (same format), next to
+// Bookmarks; Arc keeps its pinned tabs and Favorites in StorableSidebar.json instead
+function bookmarkFiles(b, pdir) {
+  if (b.id === "arc") return [`${ROOT}/${AS}Arc/StorableSidebar.json`];
+  return [`${pdir}/Bookmarks`, `${pdir}/AccountBookmarks`];
 }
 
 function parseINI(text) {
@@ -555,18 +581,90 @@ function firefoxProfiles(b, root) {
   const installDefaults = new Set(secs.filter((s) => /^Install/i.test(s.name) && s.values.Default).map((s) => s.values.Default));
   const profs = secs.filter((s) => /^Profile\d+$/i.test(s.name) && s.values.Path);
   const anyInstall = installDefaults.size > 0;
+  const seen = new Set();
   for (const s of profs) {
     const rel = s.values.IsRelative !== "0";
     const path = rel ? `${root}/${s.values.Path}` : s.values.Path;
     if (!path.startsWith("/") || !allowedPath(path) || !isDir(path)) continue;
+    const isDefault = anyInstall ? installDefaults.has(s.values.Path) : s.values.Default === "1";
+    // Firefox 138+ profile groups: profiles.ini lists one entry per group (its Path follows the
+    // group's last-used profile); the group's profiles are in Profile Groups/<StoreID>.sqlite
+    const group = s.values.StoreID ? profileGroup(root, s.values.StoreID) : [];
+    if (group.length) {
+      for (const g of group) {
+        if (seen.has(normPath(g.dir))) continue;
+        seen.add(normPath(g.dir));
+        // a group profile is opened by its folder (--profile): -P only knows profiles.ini names
+        out.push({ browser: b, dir: g.dir, profileId: g.dir, name: g.name, email: "", avatar: "",
+          isDefault: isDefault && normPath(g.dir) === normPath(path),
+          launchable: true, files: { bookmarks: [], history: `${g.dir}/places.sqlite` } });
+      }
+      continue;
+    }
+    if (seen.has(normPath(path))) continue;
+    seen.add(normPath(path));
     out.push({
       browser: b, dir: path, profileId: s.values.Name || basename(path),
       name: s.values.Name || basename(path), email: "", avatar: "",
-      isDefault: anyInstall ? installDefaults.has(s.values.Path) : s.values.Default === "1",
-      files: { bookmarks: `${path}/places.sqlite`, history: `${path}/places.sqlite` },
+      isDefault, launchable: true, files: { bookmarks: [], history: `${path}/places.sqlite` },
     });
   }
   out.sort((x, y) => (y.isDefault ? 1 : 0) - (x.isDefault ? 1 : 0));
+  return out;
+}
+
+// Safari: the shared Bookmarks.plist and the Personal profile's History.db in ~/Library/Safari;
+// Safari 17+ profiles each have a History.db in Safari's container (names in SafariTabs.db).
+// Bookmarks are shared by every profile, so only the first source reads them.
+function safariProfiles(b, root) {
+  const main = { browser: b, dir: root, profileId: "", name: "Safari", email: "", avatar: "", isDefault: true,
+    launchable: true, files: { bookmarks: [`${root}/Bookmarks.plist`], history: `${root}/History.db` } };
+  const box = `${ROOT}/Library/Containers/com.apple.Safari/Data/Library/Safari`;
+  const ids = listDir(`${box}/Profiles`).filter((d) => /^[0-9A-Fa-f-]{36}$/.test(d) && exists(`${box}/Profiles/${d}/History.db`)).sort();
+  if (!ids.length || !allowedPath(box)) return [main];
+  const names = new Map(safariProfileNames(`${box}/SafariTabs.db`));
+  main.name = "Personal";
+  const out = [main];
+  ids.forEach((id, i) => {
+    out.push({ browser: b, dir: `${box}/Profiles/${id}`, profileId: "", name: names.get(id.toUpperCase()) || `Profile ${i + 1}`, email: "", avatar: "",
+      isDefault: false, launchable: false, files: { bookmarks: [], history: `${box}/Profiles/${id}/History.db` } });
+  });
+  return out;
+}
+
+// [[UUID, name]] of Safari's profiles; SafariTabs.db can be large, so the names are kept in the
+// cache until it changes
+function safariProfileNames(db) {
+  const sig = signature([db, `${db}-wal`]);
+  const cached = readJSON(`${cacheDir()}/safari-profiles.json`);
+  if (cached && cached.sig === sig && Array.isArray(cached.names)) return cached.names.filter((x) => Array.isArray(x) && x.length === 2);
+  const names = [];
+  const c = exists(db) ? copyDB(db) : { error: "missing" };
+  if (!c.error) {
+    const r = sqlJSON(c.path, "SELECT external_uuid AS u, title AS t FROM bookmarks WHERE subtype = 2");
+    removeFile(c.path.slice(0, c.path.lastIndexOf("/")));
+    for (const x of r.rows || []) if (typeof x.u === "string" && typeof x.t === "string" && x.t.trim()) names.push([x.u.toUpperCase(), oneLine(x.t).trim()]);
+  }
+  writeFile(`${cacheDir()}/safari-profiles.json`, JSON.stringify({ sig, names }));
+  return names;
+}
+
+// [{ dir, name }] of a Firefox profile group (paths in it are relative to the Firefox folder)
+function profileGroup(root, storeId) {
+  if (!/^[A-Za-z0-9_-]{1,64}$/.test(storeId)) return [];
+  const db = `${root}/Profile Groups/${storeId}.sqlite`;
+  if (!allowedPath(db) || !exists(db)) return [];
+  const c = copyDB(db);
+  if (c.error) return [];
+  const r = sqlJSON(c.path, "SELECT path AS p, name AS n FROM Profiles ORDER BY id");
+  removeFile(c.path.slice(0, c.path.lastIndexOf("/")));
+  const out = [];
+  for (const x of r.rows || []) {
+    if (typeof x.p !== "string" || !x.p) continue;
+    const dir = normPath(x.p.startsWith("/") ? x.p : `${root}/${x.p}`);
+    if (!allowedPath(dir) || !isDir(dir)) continue;
+    out.push({ dir, name: typeof x.n === "string" && x.n.trim() ? x.n.trim() : basename(dir) });
+  }
   return out;
 }
 
@@ -581,8 +679,7 @@ function discover() {
     let list = [];
     if (b.family === "chromium") list = chromiumProfiles(b, root);
     else if (b.family === "firefox") list = firefoxProfiles(b, root);
-    else list = [{ browser: b, dir: root, profileId: "", name: "Safari", email: "", avatar: "", isDefault: true,
-      files: { bookmarks: `${root}/Bookmarks.plist`, history: `${root}/History.db` } }];
+    else list = safariProfiles(b, root);
     for (const s of list) {
       s.key = hashKey(`${b.id}\u0000${s.dir}`);
       out.push(s);
@@ -709,6 +806,79 @@ function chromiumBookmarks(path) {
     const name = typeof r.name === "string" && r.name ? r.name : NAMES.get(k) || k;
     for (const c of r.children) walk(c, name, 1);
   }
+  return { rows };
+}
+
+// Bookmarks and AccountBookmarks together (either may be missing)
+function chromiumBookmarkFiles(paths) {
+  const rows = [];
+  let error = null, ok = false;
+  for (const p of paths) {
+    const r = chromiumBookmarks(p);
+    if (r.error) error = error || r.error;
+    else {
+      ok = true;
+      for (const x of r.rows) if (rows.length < MAX_BOOKMARKS) rows.push(x);
+    }
+  }
+  return ok || !error ? { rows } : { error };
+}
+
+// Arc: pinned tabs of each space and the Favorites of this profile, from StorableSidebar.json
+// (sidebar.containers[].items and .spaces are flat lists mixing ids and objects; a space's pinned
+// container id follows "pinned" in its containerIDs; Favorites follow the profile in topAppsContainerIDs)
+function arcBookmarks(path, profileId) {
+  if (!allowedPath(path) || !exists(path)) return { rows: [] };
+  const data = $.NSData.dataWithContentsOfFileOptionsError(path, 0, $());
+  if (data.isNil()) return { error: FM.isReadableFileAtPath(path) ? "Couldn’t read Arc’s sidebar" : "noaccess" };
+  let j;
+  try {
+    j = JSON.parse(decode(data) || "");
+  } catch (e) {
+    return { error: "Couldn’t read Arc’s sidebar" };
+  }
+  const obj = (x) => !!x && typeof x === "object" && !Array.isArray(x);
+  const containers = obj(j) && obj(j.sidebar) && Array.isArray(j.sidebar.containers) ? j.sidebar.containers : [];
+  const c = containers.find((x) => obj(x) && Array.isArray(x.items));
+  if (!c) return { rows: [] };
+  const pid = profileId || "Default";
+  const mine = (p) => obj(p) && (pid === "Default" ? p.default !== undefined
+    : obj(p.custom) && obj(p.custom._0) && p.custom._0.directoryBasename === pid);
+  const kids = new Map(); // parentID -> items, in sidebar order
+  for (const it of c.items) {
+    if (!obj(it) || typeof it.id !== "string" || typeof it.parentID !== "string") continue;
+    if (!kids.has(it.parentID)) kids.set(it.parentID, []);
+    kids.get(it.parentID).push(it);
+  }
+  const roots = [];
+  for (const sp of Array.isArray(c.spaces) ? c.spaces : []) {
+    if (!obj(sp) || !mine(sp.profile) || !Array.isArray(sp.containerIDs)) continue;
+    const i = sp.containerIDs.indexOf("pinned");
+    if (i >= 0 && typeof sp.containerIDs[i + 1] === "string") roots.push([sp.containerIDs[i + 1], typeof sp.title === "string" && sp.title.trim() ? sp.title.trim() : "Space"]);
+  }
+  const tops = Array.isArray(c.topAppsContainerIDs) ? c.topAppsContainerIDs : [];
+  tops.forEach((x, i) => {
+    if (mine(x) && typeof tops[i + 1] === "string") roots.push([tops[i + 1], "Favorites"]);
+  });
+  const rows = [];
+  const seen = new Set();
+  const walk = (id, folder, depth) => {
+    if (depth > 32 || seen.has(id) || rows.length >= MAX_BOOKMARKS) return;
+    seen.add(id);
+    for (const it of kids.get(id) || []) {
+      const d = obj(it.data) ? it.data : {};
+      if (obj(d.tab)) {
+        const u = d.tab.savedURL;
+        const title = typeof it.title === "string" && it.title ? it.title : typeof d.tab.savedTitle === "string" ? d.tab.savedTitle : "";
+        if (indexable(u)) rows.push(row(u, title, "b", folder, 0, 0));
+      } else {
+        // folders (data.list), split views and other containers
+        const name = obj(d.list) && typeof it.title === "string" && it.title ? it.title : "";
+        walk(it.id, name ? `${folder}/${name}` : folder, depth + 1);
+      }
+    }
+  };
+  for (const [id, name] of roots) walk(id, name, 0);
   return { rows };
 }
 
@@ -934,7 +1104,7 @@ function refreshIndex(force) {
     const timedOut = now() - start > INDEX_TIMEOUT;
     const fam = s.browser.family;
     const hFiles = [s.files.history, `${s.files.history}-wal`];
-    const bFiles = fam === "firefox" ? hFiles : [s.files.bookmarks];
+    const bFiles = fam === "firefox" ? hFiles : s.files.bookmarks;
     const needs = (part, files, throttle, limit) => {
       if (!part) return true;
       if (part.limit !== limit) return true;
@@ -955,7 +1125,8 @@ function refreshIndex(force) {
       } else {
         if (!timedOut && needs(p.b, bFiles, false, 0)) {
           const sig = signature(bFiles);
-          const r = fam === "safari" ? safariBookmarks(s.files.bookmarks) : chromiumBookmarks(s.files.bookmarks);
+          const r = !bFiles.length ? { rows: [] } : fam === "safari" ? safariBookmarks(bFiles[0])
+            : s.browser.id === "arc" ? arcBookmarks(bFiles[0], s.profileId) : chromiumBookmarkFiles(bFiles);
           p.b = { sig, at: now(), limit: 0, status: r.error ? r.error : "ok", rows: r.error ? (r.error === "noaccess" ? [] : (p.b && p.b.rows) || []) : r.rows };
           dirty = true;
         }
@@ -1031,7 +1202,7 @@ function runIndexer(force) {
 function clearIndex() {
   writeFile(`${cacheDir()}/gen`, String(Date.now()) + "-" + PID);
   for (const name of listDir(cacheDir())) {
-    if (/^(src-[0-9a-f]{8}\.json|index\.sqlite.*|index\.tmp-.*|state\.json|stamp|tmp-\d+-\d+|index-error\.txt)$/.test(name)) removeFile(`${cacheDir()}/${name}`);
+    if (/^(src-[0-9a-f]{8}\.json|index\.sqlite.*|index\.tmp-.*|state\.json|stamp|tmp-\d+-\d+|index-error\.txt|safari-profiles\.json)$/.test(name)) removeFile(`${cacheDir()}/${name}`);
   }
 }
 
@@ -1181,7 +1352,7 @@ function searchItems(query, kind) {
   }
   const srcs = stateSources(state).filter((s) => !isExcluded(s.browser.id, s.name, cfg));
   if (!state.sources.length || !srcs.length) {
-    const why = state.sources.length ? "Every browser is excluded in the Workflow’s Configuration" : "Chrome, Arc, Brave, Edge, Vivaldi, Opera, Dia, Comet, Helium, Firefox, Zen, LibreWolf, Floorp and Safari are supported";
+    const why = state.sources.length ? "Every browser is excluded in the Workflow’s Configuration" : "Chrome, Arc, Brave, Edge, Vivaldi, Opera, Dia, Comet, Helium, ChatGPT Atlas, Firefox, Zen, LibreWolf, Floorp and Safari are supported";
     return { items: [info("No browser data found", why, "empty")] };
   }
   const q = parseQuery(query);
@@ -1270,7 +1441,7 @@ function clipboardURL() {
 function profileRows() {
   const out = [];
   for (const s of discover()) {
-    if (s.browser.family === "safari") continue;
+    if (s.browser.family === "safari" || !s.launchable) continue;
     const inst = installed(s.browser);
     if (!inst) continue;
     out.push(Object.assign({}, s, { inst }));
@@ -1287,7 +1458,7 @@ function profileItems(query) {
   const url = typed || clipboardURL();
   const all = profileRows();
   const rows = all.filter((s) => matchesWords([s.name, s.browser.name, s.browser.short, s.email, s.profileId], words));
-  if (!all.length) return { items: [info("No browser profiles found", "Chrome, Arc, Brave, Edge, Vivaldi, Opera, Dia, Comet, Helium, Firefox, Zen, LibreWolf and Floorp profiles are listed", "empty")] };
+  if (!all.length) return { items: [info("No browser profiles found", "Chrome, Brave, Edge, Vivaldi, Dia, Comet, Helium, ChatGPT Atlas, Firefox, Zen, LibreWolf and Floorp profiles are listed", "empty")] };
   if (!rows.length) return { items: [info(`No profile matches “${shorten(oneLine(words.join(" ")), 40)}”`, "Try a browser or profile name", "empty")] };
   const items = rows.map((s) => {
     const sub = [s.browser.name, s.email || (s.browser.family === "chromium" && s.profileId ? s.profileId : "")].filter(Boolean).join(" · ");
@@ -1328,6 +1499,9 @@ function frontURL() {
   if (!b || b.family === "firefox") return { bundle, url: "" };
   const script = b.family === "safari"
     ? "function run(argv) { const a = Application(argv[0]); return a.documents.length ? a.documents[0].url() : ''; }"
+    // Dia has its own dictionary (tabs with isFocused) rather than Chromium's activeTab
+    : b.id === "dia" ? "function run(argv) { const a = Application(argv[0]); if (!a.windows.length) return ''; const w = a.windows[0]; " +
+      "try { return w.activeTab.url(); } catch (e) {} const t = w.tabs.whose({ isFocused: true }); return t.length ? t[0].url() : ''; }"
     : "function run(argv) { const a = Application(argv[0]); return a.windows.length ? a.windows[0].activeTab.url() : ''; }";
   const r = runTask("/usr/bin/osascript", ["-l", "JavaScript", "-e", script, bundle], { timeout: 1.5 });
   return { bundle, url: r.status === 0 ? asURL(r.stdout.trim()) : "" };
@@ -1359,7 +1533,7 @@ function openInItems(query) {
   for (const b of BROWSERS) {
     const inst = installed(b);
     if (!inst) continue;
-    const profs = b.family === "safari" ? [] : discover().filter((s) => s.browser === b);
+    const profs = b.family === "safari" ? [] : discover().filter((s) => s.browser === b && s.launchable);
     rows.push({ b, inst, prof: null, isDef: b.bundles.includes(def) });
     if (profs.length > 1) for (const p of profs) rows.push({ b, inst, prof: p, isDef: false });
   }
@@ -1461,8 +1635,9 @@ function alfredSearch(text) {
 // open [-n] -b <bundle> [--args <profile and window flags>] [url]
 function browserArgs(b, bundle, profileId, url, priv) {
   const flags = [];
-  if (profileId) flags.push(b.family === "firefox" ? "-P" : `--profile-directory=${profileId}`);
-  if (profileId && b.family === "firefox") flags.push(profileId);
+  // Firefox: -P <name> for profiles.ini profiles, --profile <folder> for profile-group ones
+  if (profileId && b.family === "firefox") flags.push(profileId.startsWith("/") ? "--profile" : "-P", profileId);
+  else if (profileId && b.profileFlag !== false) flags.push(`--profile-directory=${profileId}`);
   if (priv && b.private) flags.push(b.private);
   if (!flags.length) return url ? ["-b", bundle, url] : ["-b", bundle];
   // a second instance hands the arguments to the running browser (Chromium) or opens the profile
@@ -1492,6 +1667,7 @@ function doAction(arg) {
       const inst = installed(b);
       if (!inst) return `Couldn’t open ${b.name}: it isn’t installed`;
       const profile = b.family === "safari" ? "" : env("bh_profile", "");
+      if (profile.startsWith("/") && (b.family !== "firefox" || !isDir(profile))) return `Couldn’t open ${b.name}: the profile folder is gone`;
       return openArgs(browserArgs(b, inst.bundle, profile, action === "launch" ? "" : url, action === "private"));
     }
     case "choose":

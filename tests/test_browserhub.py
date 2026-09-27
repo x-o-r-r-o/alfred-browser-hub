@@ -910,6 +910,145 @@ class Audit3Tests(Base):
         self.assertEqual(self.action("", bh_action="open", bh_url="https://x.example/", bh_browser=""), 'open ["https://x.example/"]')
 
 
+class FormatTests(Base):
+    """Formats checked against current upstream sources (2026-09): Chromium AccountBookmarks, Arc's
+    StorableSidebar.json, Opera side profiles, Firefox profile groups, Safari profiles, ChatGPT Atlas."""
+
+    def test_account_bookmarks(self):
+        c = self.A("Google", "Chrome", "Profile 1")
+        write(os.path.join(c, "AccountBookmarks"), chrome_bookmarks([("Synced Roadmap", "https://roadmap.work.example/")]))
+        it = self.find(self.items("bmk", "roadmap"), "Synced Roadmap")
+        self.assertEqual(it["variables"]["bh_profile"], "Profile 1")
+        self.assertIn("Invoices", self.titles("bmk", "invoices"))  # Bookmarks is still read
+        # a profile with only AccountBookmarks (Bookmarks may be encrypted-only one day)
+        write(self.A("Google", "Chrome", "Profile 2", "AccountBookmarks"), chrome_bookmarks([("Only Account", "https://only-account.example/")]))
+        self.assertIn("Only Account", self.titles("bmk", "only account"))
+
+    def arc(self, sidebar):
+        a = self.A("Arc")
+        write(os.path.join(a, "User Data", "Local State"), json.dumps({"profile": {"info_cache": {
+            "Default": {"name": "Me"}, "Profile 1": {"name": "Work"}, "Profile 9": {"name": "__ARC_SYSTEM_PROFILE"}}}}))
+        make_chrome_history(os.path.join(a, "User Data", "Default", "History"), [("https://arc-history.example/", "Arc History Page", 1, 70)])
+        make_chrome_history(os.path.join(a, "User Data", "Profile 1", "History"), [("https://arc-work.example/", "Arc Work Page", 1, 70)])
+        make_chrome_history(os.path.join(a, "User Data", "Profile 9", "History"), [("https://arc-system.example/", "Arc System", 1, 70)])
+        write(os.path.join(a, "StorableSidebar.json"), json.dumps(sidebar))
+        self.apps["company.thebrowser.Browser"] = "/Applications/Arc.app"
+
+    def test_arc_sidebar(self):
+        tab = lambda i, parent, title, url, saved="": {"id": i, "parentID": parent, "childrenIds": [], "title": title,
+                                                       "data": {"tab": {"savedURL": url, "savedTitle": saved}}}
+        items = ["p-home", {"id": "f1", "parentID": "p-home", "childrenIds": ["t2"], "title": "Research", "data": {"list": {}}},
+                 "t1", tab("t1", "p-home", None, "https://pinned.example/", "Pinned Page"),
+                 tab("t2", "f1", "Deep Paper", "https://paper.example/"),
+                 tab("t3", "u-home", "Unpinned Tab", "https://unpinned.example/"),
+                 tab("t4", "top-default", "Mail", "https://mail.example/"),
+                 tab("t5", "p-work", "Work Board", "https://board.example/"),
+                 tab("t6", "__proto__", "Proto", "https://proto.example/"),
+                 {"id": "loop", "parentID": "f1", "childrenIds": [], "title": "Loop", "data": {"list": {}}}]
+        self.arc({"sidebar": {"containers": [{"global": {}}, {
+            "items": items,
+            "spaces": ["s1", {"id": "s1", "title": "Home", "containerIDs": ["unpinned", "u-home", "pinned", "p-home"], "profile": {"default": True}},
+                       "s2", {"id": "s2", "title": "Work", "containerIDs": ["pinned", "p-work", "unpinned", "u-work"],
+                              "profile": {"custom": {"_0": {"directoryBasename": "Profile 1"}}}}],
+            "topAppsContainerIDs": [{"default": True}, "top-default", {"custom": {"_0": {"directoryBasename": "Profile 1"}}}, "top-work"]}]}})
+        b = self.titles("bmk", "@arc")
+        for t in ("Pinned Page", "Deep Paper", "Mail", "Work Board"):
+            self.assertIn(t, b)
+        self.assertNotIn("Unpinned Tab", b)
+        self.assertNotIn("Proto", b)
+        it = self.find(self.items("bmk", "paper"), "Deep Paper")
+        self.assertIn("★ Research", it["subtitle"].replace("Home/", ""))
+        self.assertIn("Home/Research", it["subtitle"])
+        self.assertEqual(it["variables"]["bh_profile"], "Default")
+        self.assertEqual(self.find(self.items("bmk", "board"), "Work Board")["variables"]["bh_profile"], "Profile 1")
+        self.assertIn("★ Favorites", self.find(self.items("bmk", "mail"), "Mail")["subtitle"])
+        self.assertIn("Arc History Page", self.titles("hist", "arc"))
+        self.assertNotIn("Arc System", self.titles("web", "arc system"))  # Arc's internal profile
+        self.assertEqual(self.titles("prof", "arc"), ["No profile matches “arc”"])  # Arc has no profile flag
+        self.assertEqual(self.action("", bh_action="open", bh_url="https://x.example/", bh_browser="arc", bh_profile="Profile 1"),
+                         'open ["-b","company.thebrowser.Browser","https://x.example/"]')
+
+    def test_arc_sidebar_damaged(self):
+        for bad in ("not json", "[]", '{"sidebar": 1}', '{"sidebar": {"containers": [{"items": [1, null, "x"], "spaces": 5}]}}'):
+            shutil.rmtree(self.A("Arc"), ignore_errors=True)
+            self.arc({})
+            write(self.A("Arc", "StorableSidebar.json"), bad)
+            self.assertIn("Arc History Page", self.titles("web", "arc history"))
+
+    def test_opera_default_folder_and_side_profiles(self):
+        o = self.A("com.operasoftware.Opera")
+        shutil.rmtree(o)
+        write(os.path.join(o, "Default", "Bookmarks"), chrome_bookmarks([("Opera Main", "https://opera-main.example/")]))
+        write(os.path.join(o, "_side_profiles", "abc123", "Default", "Bookmarks"), chrome_bookmarks([("Opera Side", "https://opera-side.example/")]))
+        write(os.path.join(o, "_side_profiles", "def456", "Bookmarks"), chrome_bookmarks([("Opera Flat Side", "https://opera-flat.example/")]))
+        self.apps["com.operasoftware.Opera"] = "/Applications/Opera.app"
+        for t in ("Opera Main", "Opera Side", "Opera Flat Side"):
+            self.assertIn(t, self.titles("bmk", t.lower()))
+        self.assertIn("Opera (Side profile 1)", self.find(self.items("bmk", "opera side"), "Opera Side")["subtitle"])
+        self.assertEqual(self.titles("prof", "opera"), ["No profile matches “opera”"])  # Opera profiles can't be opened from outside
+        self.assertEqual(self.action("", bh_action="open", bh_url="https://x.example/", bh_browser="opera", bh_profile="Default"),
+                         'open ["-b","com.operasoftware.Opera","https://x.example/"]')  # no --profile-directory (hangs Opera)
+        self.assertNotIn("Opera · Side profile 1", self.titles("openin", "opera"))
+
+    def test_firefox_profile_groups(self):
+        f = self.A("Firefox")
+        with open(os.path.join(f, "profiles.ini"), encoding="utf-8") as fh:
+            ini = fh.read()
+        write(os.path.join(f, "profiles.ini"), ini.replace("Path=Profiles/abc.default-release\n\n", "Path=Profiles/abc.default-release\nStoreID=a1B2c3\n\n", 1))
+        make_places(os.path.join(f, "Profiles", "grp.Work", "places.sqlite"), [(1, "https://group-work.example/", "Group Work Page", 1, 40)], [])
+        os.makedirs(os.path.join(f, "Profile Groups"))
+        db = sqlite3.connect(os.path.join(f, "Profile Groups", "a1B2c3.sqlite"))
+        db.execute("CREATE TABLE Profiles(id INTEGER PRIMARY KEY, path TEXT NOT NULL UNIQUE, name TEXT NOT NULL, avatar TEXT, themeId TEXT, themeFg TEXT, themeBg TEXT)")
+        db.execute("INSERT INTO Profiles(path, name) VALUES('Profiles/abc.default-release', 'Personal'), ('Profiles/grp.Work', 'Work'), ('/etc', 'Escape')")
+        db.commit()
+        db.close()
+        prof = self.items("prof", "firefox")
+        titles = [i["title"] for i in prof]
+        self.assertEqual(titles[0], "Personal")  # the group's last-used profile is the install default
+        self.assertIn("Work", titles)
+        self.assertIn("default", titles)  # the other profiles.ini profile
+        self.assertNotIn("Escape", titles)  # outside the fixture root: never read
+        self.assertNotIn("default-release", titles)  # replaced by its group's names
+        work = self.find(prof, "Work")
+        folder = os.path.join(f, "Profiles", "grp.Work")
+        self.assertEqual(work["variables"]["bh_profile"], folder)
+        self.assertEqual(self.action("", bh_action="open", bh_url="https://x.example/", bh_browser="firefox", bh_profile=folder),
+                         json.dumps(["-n", "-b", "org.mozilla.firefox", "--args", "--profile", folder, "https://x.example/"], separators=(",", ":"), ensure_ascii=False).join(["open ", ""]))
+        self.assertEqual(self.action("", bh_action="open", bh_url="https://x.example/", bh_browser="firefox", bh_profile=folder + "-gone"),
+                         "Couldn’t open Firefox: the profile folder is gone")
+        self.assertIn("Group Work Page", self.titles("web", "group work"))
+        self.assertIn("Only In The WAL", self.titles("hist", "wal"))
+
+    def test_safari_profiles(self):
+        box = os.path.join(self.root, "Library", "Containers", "com.apple.Safari", "Data", "Library", "Safari")
+        uid = "0A1B2C3D-0000-4000-8000-00000000ABCD"
+        make_safari_history(os.path.join(box, "Profiles", uid, "History.db"), [("https://safari-work.example/", "Safari Work Page", 2, 30)])
+        make_safari_history(os.path.join(box, "Profiles", "1A1B2C3D-0000-4000-8000-00000000ABCD", "History.db"), [("https://safari-p2.example/", "Unnamed Profile Page", 1, 30)])
+        db = sqlite3.connect(os.path.join(box, "SafariTabs.db"))
+        db.execute("CREATE TABLE bookmarks(id INTEGER PRIMARY KEY, title TEXT, subtype INTEGER, external_uuid TEXT)")
+        db.execute("INSERT INTO bookmarks(title, subtype, external_uuid) VALUES('School', 2, ?), ('Tab', 0, 'x')", (uid.lower(),))
+        db.commit()
+        db.close()
+        it = self.find(self.items("hist", "safari work"), "Safari Work Page")
+        self.assertIn("Safari (School)", it["subtitle"])
+        self.assertEqual(it["variables"]["bh_browser"], "safari")
+        self.assertIn("Safari (Profile 2)", self.find(self.items("hist", "unnamed"), "Unnamed Profile Page")["subtitle"])
+        self.assertIn("Safari Work Page", self.titles("web", "@safari @school "))
+        self.assertIn("Safari (Personal)", self.find(self.items("bmk", "sourdough"), "Sourdough Starter")["subtitle"])
+        self.assertIn("Safari · School", self.titles("browsers"))
+
+    def test_chatgpt_atlas(self):
+        h = self.A("com.openai.atlas", "browser-data", "host")
+        write(os.path.join(h, "Default", "Bookmarks"), chrome_bookmarks([("Atlas Bookmark", "https://atlas.example/")]))
+        self.apps["com.openai.atlas"] = "/Applications/ChatGPT Atlas.app"
+        it = self.find(self.items("bmk", "atlas"), "Atlas Bookmark")
+        self.assertEqual(it["variables"]["bh_browser"], "atlas")
+        self.assertIn("ChatGPT Atlas", self.titles("openin", "atlas"))
+
+    def test_other_schemes_open_in_the_default_browser(self):
+        self.assertEqual(self.action("", bh_action="open", bh_url="ftp://files.example/x", bh_browser=""), 'open ["-b","com.apple.Safari","ftp://files.example/x"]')
+
+
 class RuntimeTests(Base):
     def test_bare_alfred_environment(self):
         """Alfred's runtime: no LANG, bare PATH, cache path with spaces and quotes, fresh install"""
