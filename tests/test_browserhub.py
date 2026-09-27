@@ -404,7 +404,7 @@ class SearchTests(Base):
         self.assertEqual(self.titles("web", "@chrome @wo"), ["Chrome · Work"])
         self.assertEqual(self.titles("web", "@firefox @d"), ["Firefox · default-release", "Firefox · default"])
         self.assertEqual(self.titles("web", "@firefox @wo"), ["No browser or profile matches “@wo”"])
-        self.assertEqual(self.titles("web", "@firefox @"), ["Firefox", "Firefox · default-release", "Firefox · default"])
+        self.assertEqual(self.titles("web", "@firefox @"), ["Firefox · default-release", "Firefox · default"])
 
     def test_no_results(self):
         items = self.items("web", "qwertyuiop")
