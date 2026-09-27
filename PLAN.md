@@ -65,3 +65,10 @@ Raycast demand this workflow replaces (downloads, 2026-09-28):
 - Safari profiles (per-profile history)
 - Delete a history entry (would need writing to browser databases: deliberately left out of v1.0)
 - ChatGPT Atlas, Sidekick, Island, Whale, Ghost Browser once their data paths are confirmed
+
+## Audits (v1.0.0, before release)
+- [x] Pass 1: selected text around a link no longer filters every browser away; `localhost` opens as http; leftovers of killed index builds pruned; `@browser @` suggests only that browser's profiles; profiles whose names have no letters get a usable `@` token; Firefox folder recursion depth-limited; long queries capped at 12 words
+- [x] Pass 2: no `{}` lookups on names from browser files (`constructor`, `__proto__`); cache files written with umask 077; Hotkey mentioned in the README
+- [x] Pass 3: index rows name sources by key, not position (a search between the index swap and the state write can't mislabel); "Clear the index" wins over a running indexer (its copies are deleted); `file://` bookmarks open in a browser, never through LaunchServices (which would launch apps); a failed build still updates the stamp (no respawn per keystroke)
+- [x] Alfred runtime: `env -i` suite run, cache path with spaces, quotes and ü, fresh cache folder, config values "1"/"0"/padded/empty/garbage, ~/.sqliterc ignored (`-init /dev/null`), WAL databases without their log
+- [x] Performance: ~75–90 ms per keystroke with 60,000 indexed pages (osascript start-up included)
