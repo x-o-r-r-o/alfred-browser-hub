@@ -244,6 +244,9 @@ function permissionError(err) {
 ObjC.bindFunction("kill", ["int", ["int", "int"]]);
 ObjC.bindFunction("setsid", ["int", []]);
 ObjC.bindFunction("rename", ["int", ["char *", "char *"]]);
+ObjC.bindFunction("umask", ["unsigned short", ["unsigned short"]]);
+// Everything this workflow writes (copies of browsing data) is readable by this user only
+$.umask(0o077);
 
 // Run a program with argv (never through a shell with interpolated data).
 function runTask(path, args, opts = {}) {
@@ -487,7 +490,7 @@ function chromiumProfiles(b, root) {
   dirs.sort((x, y) => (x === "Default" ? -1 : y === "Default" ? 1 : 0));
   for (const d of dirs) {
     const pdir = `${root}/${d}`;
-    const info = cache[d] && typeof cache[d] === "object" ? cache[d] : {};
+    const info = Object.prototype.hasOwnProperty.call(cache, d) && cache[d] && typeof cache[d] === "object" ? cache[d] : {};
     const avatar = ["Google Profile Picture.png", "Edge Profile Picture.png"].map((f) => `${pdir}/${f}`).find(exists) || "";
     out.push({
       browser: b, dir: pdir, profileId: d,
@@ -663,7 +666,7 @@ function chromiumBookmarks(path) {
     return { error: "Couldn’t read the bookmarks file" };
   }
   const rows = [];
-  const NAMES = { bookmark_bar: "Bookmarks Bar", other: "Other Bookmarks", synced: "Mobile Bookmarks" };
+  const NAMES = new Map([["bookmark_bar", "Bookmarks Bar"], ["other", "Other Bookmarks"], ["synced", "Mobile Bookmarks"]]);
   const walk = (node, folder, depth) => {
     if (!node || typeof node !== "object" || depth > 64 || rows.length >= MAX_BOOKMARKS) return;
     if (node.type === "url") {
@@ -680,7 +683,7 @@ function chromiumBookmarks(path) {
   for (const k of Object.keys(roots)) {
     const r = roots[k];
     if (!r || typeof r !== "object" || !Array.isArray(r.children)) continue;
-    const name = typeof r.name === "string" && r.name ? r.name : NAMES[k] || k;
+    const name = typeof r.name === "string" && r.name ? r.name : NAMES.get(k) || k;
     for (const c of r.children) walk(c, name, 1);
   }
   return { rows };
@@ -734,7 +737,7 @@ function safariBookmarks(path) {
     return { error: "Couldn’t read Safari’s bookmarks" };
   }
   const rows = [];
-  const NAMES = { BookmarksBar: "Favorites", BookmarksMenu: "Bookmarks Menu", "com.apple.ReadingList": "Reading List" };
+  const NAMES = new Map([["BookmarksBar", "Favorites"], ["BookmarksMenu", "Bookmarks Menu"], ["com.apple.ReadingList", "Reading List"]]);
   const walk = (node, folder, depth) => {
     if (!node || typeof node !== "object" || depth > 64 || rows.length >= MAX_BOOKMARKS) return;
     const t = node.WebBookmarkType;
@@ -744,7 +747,7 @@ function safariBookmarks(path) {
       if (indexable(u)) rows.push(row(u, title, "b", folder, 0, 0));
     } else if (t === "WebBookmarkTypeList" && Array.isArray(node.Children)) {
       let name = typeof node.Title === "string" ? node.Title : "";
-      name = NAMES[name] || name;
+      name = NAMES.get(name) || name;
       const sub = depth === 0 ? "" : folder ? `${folder}/${name}` : name;
       for (const c of node.Children) walk(c, sub, depth + 1);
     }

@@ -841,6 +841,36 @@ class Audit1Tests(Base):
         self.assertTrue(self.titles("web", q)[0].startswith("No bookmarks or history match"))
 
 
+class Audit2Tests(Base):
+    """Regression tests for the second audit"""
+
+    def test_folder_names_that_are_object_properties(self):
+        s = os.path.join(self.root, "Library", "Safari", "Bookmarks.plist")
+        leaf = {"WebBookmarkType": "WebBookmarkTypeLeaf", "URLString": "https://proto.example/", "URIDictionary": {"title": "Proto Page"}}
+        write(s, plistlib.dumps({"WebBookmarkType": "WebBookmarkTypeList", "Title": "", "Children": [
+            {"WebBookmarkType": "WebBookmarkTypeList", "Title": "constructor", "Children": [
+                {"WebBookmarkType": "WebBookmarkTypeList", "Title": "__proto__", "Children": [leaf]}]}]}, fmt=plistlib.FMT_BINARY))
+        write(self.A("Google", "Chrome", "Default", "Bookmarks"), json.dumps({"roots": {"constructor": {"type": "folder", "children": [
+            {"type": "url", "name": "Chrome Proto", "url": "https://chrome-proto.example/"}]}}}))
+        it = self.find(self.items("web", "proto page"), "Proto Page")
+        self.assertIn("★ constructor/__proto__", it["subtitle"])
+        it = self.find(self.items("web", "chrome proto"), "Chrome Proto")
+        self.assertIn("★ constructor ·", it["subtitle"])
+
+    def test_profile_named_like_object_property(self):
+        write(self.A("Google", "Chrome", "Local State"), json.dumps({"profile": {"info_cache": {"Default": {"name": "Home"}}, "profiles_order": ["constructor", "Default"]}}))
+        os.makedirs(self.A("Google", "Chrome", "constructor"))
+        titles = self.titles("prof", "", index=False)
+        self.assertIn("Home", titles)
+        self.assertIn("constructor", titles)
+
+    def test_index_files_are_private(self):
+        self.index()
+        for f in self.cache_files():
+            mode = stat.S_IMODE(os.stat(os.path.join(self.cache, f)).st_mode)
+            self.assertEqual(mode & 0o077, 0, (f, oct(mode)))
+
+
 class RuntimeTests(Base):
     def test_bare_alfred_environment(self):
         """Alfred's runtime: no LANG, bare PATH, cache path with spaces and quotes, fresh install"""
