@@ -25,7 +25,7 @@ function isTest() {
   return TEST_ROOT !== "";
 }
 
-const INDEX_VERSION = 1;
+const INDEX_VERSION = 2;
 const MAX_ROWS = 50;
 const REFRESH_AFTER = 60; // seconds: an older index is checked for changes in the background
 const HISTORY_MIN_AGE = 180; // seconds: a changed history database is copied at most this often
@@ -813,7 +813,10 @@ function titleFold(s) {
 // Merge every source into one row per page and write index.sqlite (atomically, by rename)
 function buildDB(sources, parts, gen0) {
   const pages = new Map();
-  sources.forEach((s, idx) => {
+  // rows name their sources by key ("|b1a2b3c4d|h…|"), never by position: a search that reads a
+  // state.json from just before or after this build still labels and opens them correctly
+  sources.forEach((s) => {
+    const idx = s.key;
     const p = parts.get(s.key);
     for (const kind of ["b", "h"]) {
       const part = p && p[kind];
@@ -894,6 +897,13 @@ function refreshIndex(force) {
   let changed = !prev || prev.v !== INDEX_VERSION || !exists(dbPath()) || prev.history !== cfg.history ||
     JSON.stringify((prev.sources || []).map((s) => s.key)) !== JSON.stringify(sources.map((s) => s.key));
   const parts = new Map();
+  const written = [];
+  // "Clear the index" ran meanwhile: remove what this run wrote, so no copy survives it
+  const cleared = () => {
+    if (genValue() === gen0) return false;
+    for (const k of written) removeFile(srcPath(k));
+    return true;
+  };
   for (const s of sources) {
     const p = loadPart(s.key);
     let dirty = false;
@@ -942,14 +952,19 @@ function refreshIndex(force) {
       dirty = true;
     }
     if (dirty) {
-      if (genValue() !== gen0) return false; // cleared meanwhile
+      if (cleared()) return false;
       writeFile(srcPath(s.key), JSON.stringify(p));
+      written.push(s.key);
+      if (isTest() && env("BH_TEST_CLEAR_DURING", "") === "1") clearIndex();
       changed = true;
     }
     parts.set(s.key, p);
   }
   if (changed) {
-    if (!buildDB(sources, parts, gen0)) return false;
+    if (!buildDB(sources, parts, gen0)) {
+      cleared();
+      return false;
+    }
     const st = {
       v: INDEX_VERSION, built: now(), history: cfg.history,
       sources: sources.map((s) => {
@@ -961,7 +976,7 @@ function refreshIndex(force) {
         };
       }),
     };
-    if (genValue() !== gen0) {
+    if (cleared()) {
       removeFile(dbPath());
       return false;
     }
@@ -982,6 +997,8 @@ function runIndexer(force) {
     writeFile(`${cacheDir()}/index-error.txt`, String(e && e.message ? e.message : e));
   } finally {
     cleanTmp();
+    // also after a failure: searches retry once a minute, not on every keystroke
+    if (exists(statePath())) touch(stampPath());
     unlock(lock);
   }
 }
@@ -1027,13 +1044,12 @@ function parseQuery(q) {
   const finished = filters.slice(0, last && last[2] ? -1 : filters.length).filter(Boolean);
   return { words: [...new Set(words)].slice(0, 12), filters: filters.filter(Boolean), finished, typingFilter };
 }
-// State sources, enriched with their browser, label and the matching result
+// State sources, enriched with their browser (idx: the key rows use to name them)
 function stateSources(state) {
-  const list = state.sources.map((s, idx) => {
+  return state.sources.map((s) => {
     const b = BROWSER_BY_ID.get(s.browser);
-    return b ? Object.assign({}, s, { idx, browser: b, short: b.short }) : null;
+    return b && /^[0-9a-f]{8}$/.test(String(s.key)) ? Object.assign({}, s, { idx: s.key, browser: b, short: b.short }) : null;
   }).filter(Boolean);
-  return list;
 }
 function matchesFilter(s, f) {
   const b = s.browser;
@@ -1062,7 +1078,7 @@ function searchSQL(words, allowed, kind, limit) {
   if (allowed) {
     const kinds = kind ? [kind] : ["b", "h"];
     const tags = [];
-    for (const idx of allowed) for (const k of kinds) tags.push(`srcs LIKE '%|${k}${idx}|%'`);
+    for (const idx of allowed) for (const k of kinds) if (/^[0-9a-f]{8}$/.test(idx)) tags.push(`srcs LIKE '%|${k}${idx}|%'`);
     conds.push(tags.length ? `(${tags.join(" OR ")})` : "0");
   } else if (kind) conds.push(`srcs LIKE '%|${kind}%'`);
   const where = conds.length ? `WHERE ${conds.join(" AND ")}` : "";
@@ -1092,7 +1108,7 @@ function resultItem(r, byIdx, allowedSet, cfg) {
   const tags = String(r.srcs || "").split("|").filter(Boolean);
   const bSrc = [], hSrc = [];
   for (const t of tags) {
-    const idx = Number(t.slice(1));
+    const idx = t.slice(1);
     const s = byIdx.get(idx);
     if (!s || (allowedSet && !allowedSet.has(idx))) continue;
     (t[0] === "b" ? bSrc : hSrc).push(s);
@@ -1441,6 +1457,8 @@ function doAction(arg) {
       const id = env("bh_browser", "");
       if (!id) {
         if (!url) return "Couldn’t open it: no link";
+        // "open file:///…/Some.app" would launch it: file links always go to a browser
+        if (schemeOf(url) === "file") return openArgs(["-b", defaultBrowserBundle() || "com.apple.Safari", url]);
         return openArgs([url]);
       }
       const b = BROWSER_BY_ID.get(id);

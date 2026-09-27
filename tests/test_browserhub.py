@@ -24,6 +24,11 @@ def write(path, data):
     return path
 
 
+def load_json(path):
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
+
 def chrome_time(unix):
     return int((unix + 11644473600) * 1e6)
 
@@ -544,7 +549,7 @@ class IndexTests(Base):
         self.assertTrue(t)
         # then the copies are deleted
         self.index(excluded_browsers="Chrome, safari")
-        state = json.load(open(os.path.join(self.cache, "state.json")))
+        state = load_json(os.path.join(self.cache, "state.json"))
         self.assertFalse([s for s in state["sources"] if s["browser"] in ("chrome", "safari")])
         self.assertEqual(len([f for f in self.cache_files() if f.startswith("src-")]), len(state["sources"]))
 
@@ -573,11 +578,11 @@ class IndexTests(Base):
         make_chrome_history(self.A("Google", "Chrome Beta", "Default", "History"), rows)
         t = self.titles("hist", "@chromebeta many", history_limit="100")
         self.assertEqual(len(t), 50)
-        state_rows = [s for s in json.load(open(os.path.join(self.cache, "state.json")))["sources"] if s["browser"] == "chromebeta"][0]["h"]
+        state_rows = [s for s in load_json(os.path.join(self.cache, "state.json"))["sources"] if s["browser"] == "chromebeta"][0]["h"]
         self.assertEqual(state_rows, 100)
         for v in ("junk", "", "-5"):
             self.index(history_limit=v)
-            s = [s for s in json.load(open(os.path.join(self.cache, "state.json")))["sources"] if s["browser"] == "chromebeta"][0]
+            s = [s for s in load_json(os.path.join(self.cache, "state.json"))["sources"] if s["browser"] == "chromebeta"][0]
             self.assertEqual(s["h"], 150, v)
 
     def test_clear_index(self):
@@ -869,6 +874,40 @@ class Audit2Tests(Base):
         for f in self.cache_files():
             mode = stat.S_IMODE(os.stat(os.path.join(self.cache, f)).st_mode)
             self.assertEqual(mode & 0o077, 0, (f, oct(mode)))
+
+
+class Audit3Tests(Base):
+    """Regression tests for the third audit"""
+
+    def test_rows_name_sources_by_key(self):
+        self.index()
+        path = os.path.join(self.cache, "state.json")
+        st = load_json(path)
+        st["sources"].reverse()  # a state.json from another build, with its sources in another order
+        write(path, json.dumps(st))
+        it = self.find(self.items("web", "invoices", index=False), "Invoices")
+        self.assertIn("Chrome (Work)", it["subtitle"])
+        self.assertEqual(it["variables"]["bh_profile"], "Profile 1")
+        self.assertIn("Invoices", self.titles("web", "@work invoices", index=False))
+
+    def test_cleared_during_indexing_leaves_nothing(self):
+        self.index(BH_TEST_CLEAR_DURING="1")
+        left = [f for f in self.cache_files() if f.startswith(("src-", "index", "state"))]
+        self.assertEqual(left, [])
+
+    def test_failed_build_still_updates_the_stamp(self):
+        self.index()
+        os.remove(os.path.join(self.cache, "stamp"))
+        os.remove(os.path.join(self.cache, "index.sqlite"))
+        os.makedirs(os.path.join(self.cache, "index.sqlite", "x"))  # rename onto it fails
+        self.js(["index", "force"])
+        self.assertIn("stamp", self.cache_files())
+        self.assertNotIn("index.lock", self.cache_files())
+
+    def test_file_links_open_in_a_browser(self):
+        self.assertEqual(self.action("", bh_action="open", bh_url="file:///Applications/Calculator.app", bh_browser=""),
+                         'open ["-b","com.apple.Safari","file:///Applications/Calculator.app"]')
+        self.assertEqual(self.action("", bh_action="open", bh_url="https://x.example/", bh_browser=""), 'open ["https://x.example/"]')
 
 
 class RuntimeTests(Base):
