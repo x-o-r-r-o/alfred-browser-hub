@@ -1,0 +1,54 @@
+{
+  "icon": [
+    "globe",
+    "#2563EB"
+  ],
+  "bookmark": [
+    "bookmark.fill",
+    "#D97706"
+  ],
+  "history": [
+    "clock.arrow.circlepath",
+    "#475569"
+  ],
+  "browser": [
+    "safari.fill",
+    "#0284C7"
+  ],
+  "profile": [
+    "person.crop.circle.fill",
+    "#7C3AED"
+  ],
+  "link": [
+    "link",
+    "#0891B2"
+  ],
+  "filter": [
+    "line.3.horizontal.decrease.circle.fill",
+    "#4F46E5"
+  ],
+  "refresh": [
+    "arrow.clockwise",
+    "#16A34A"
+  ],
+  "clear": [
+    "trash.fill",
+    "#DC2626"
+  ],
+  "lock": [
+    "lock.shield.fill",
+    "#EA580C"
+  ],
+  "info": [
+    "info.circle.fill",
+    "#2563EB"
+  ],
+  "error": [
+    "exclamationmark.triangle.fill",
+    "#DC2626"
+  ],
+  "empty": [
+    "magnifyingglass",
+    "#64748B"
+  ]
+}

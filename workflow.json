@@ -1,0 +1,371 @@
+{
+  "bundleid": "io.github.x-o-r-r-o.browserhub",
+  "name": "Browser Hub",
+  "description": "Search bookmarks and history of every browser and profile, open profiles, and open links in another browser",
+  "category": "Internet",
+  "createdby": "x-o-r-r-o",
+  "webaddress": "https://github.com/x-o-r-r-o/alfred-browser-hub",
+  "version": "1.0.0",
+  "variablesdontexport": [],
+  "config": [
+    {
+      "type": "textfield",
+      "variable": "keyword_web",
+      "label": "Keywords",
+      "description": "Search bookmarks and history",
+      "config": {
+        "default": "web",
+        "placeholder": "web",
+        "required": true,
+        "trim": true
+      }
+    },
+    {
+      "type": "textfield",
+      "variable": "keyword_bmk",
+      "label": "",
+      "description": "Bookmarks only",
+      "config": {
+        "default": "bmk",
+        "placeholder": "bmk",
+        "required": true,
+        "trim": true
+      }
+    },
+    {
+      "type": "textfield",
+      "variable": "keyword_webh",
+      "label": "",
+      "description": "History only",
+      "config": {
+        "default": "webh",
+        "placeholder": "webh",
+        "required": true,
+        "trim": true
+      }
+    },
+    {
+      "type": "textfield",
+      "variable": "keyword_prof",
+      "label": "",
+      "description": "Browser profiles",
+      "config": {
+        "default": "prof",
+        "placeholder": "prof",
+        "required": true,
+        "trim": true
+      }
+    },
+    {
+      "type": "textfield",
+      "variable": "keyword_openin",
+      "label": "",
+      "description": "Open a link in a browser or profile",
+      "config": {
+        "default": "openin",
+        "placeholder": "openin",
+        "required": true,
+        "trim": true
+      }
+    },
+    {
+      "type": "textfield",
+      "variable": "keyword_browsers",
+      "label": "",
+      "description": "Indexed browsers, refresh and clear the index",
+      "config": {
+        "default": "browsers",
+        "placeholder": "browsers",
+        "required": true,
+        "trim": true
+      }
+    },
+    {
+      "type": "popupbutton",
+      "variable": "open_with",
+      "label": "Open results in",
+      "description": "⌘↩ opens in the other one.",
+      "config": {
+        "default": "source",
+        "pairs": [
+          [
+            "The browser and profile they came from",
+            "source"
+          ],
+          [
+            "The default browser",
+            "default"
+          ]
+        ]
+      }
+    },
+    {
+      "type": "checkbox",
+      "variable": "index_history",
+      "label": "History",
+      "description": "",
+      "config": {
+        "default": true,
+        "required": false,
+        "text": "Index history, not only bookmarks"
+      }
+    },
+    {
+      "type": "popupbutton",
+      "variable": "history_limit",
+      "label": "History pages",
+      "description": "The most recent pages kept per profile.",
+      "config": {
+        "default": "10000",
+        "pairs": [
+          [
+            "2,000",
+            "2000"
+          ],
+          [
+            "10,000",
+            "10000"
+          ],
+          [
+            "50,000",
+            "50000"
+          ],
+          [
+            "All (up to 200,000)",
+            "0"
+          ]
+        ]
+      }
+    },
+    {
+      "type": "textfield",
+      "variable": "excluded_browsers",
+      "label": "Don’t index",
+      "description": "Browsers to leave out of the index, separated by commas. Use Browser/Profile for one profile, like Chrome/Work.",
+      "config": {
+        "default": "",
+        "placeholder": "Safari, Chrome/Work",
+        "required": false,
+        "trim": true
+      }
+    }
+  ],
+  "objects": [
+    {
+      "id": "sf_web",
+      "type": "scriptfilter",
+      "keyword": "{var:keyword_web}",
+      "title": "Search Bookmarks and History",
+      "subtext": "Every browser and profile · @browser to filter",
+      "script": "osascript -l JavaScript ./browserhub.js web \"$1\"",
+      "running": "Searching…",
+      "trimmode": 1
+    },
+    {
+      "id": "sf_bmk",
+      "type": "scriptfilter",
+      "keyword": "{var:keyword_bmk}",
+      "title": "Search Bookmarks",
+      "subtext": "Every browser and profile · @browser to filter",
+      "script": "osascript -l JavaScript ./browserhub.js bmk \"$1\"",
+      "running": "Searching…",
+      "trimmode": 1
+    },
+    {
+      "id": "sf_hist",
+      "type": "scriptfilter",
+      "keyword": "{var:keyword_webh}",
+      "title": "Search History",
+      "subtext": "Every browser and profile · @browser to filter",
+      "script": "osascript -l JavaScript ./browserhub.js hist \"$1\"",
+      "running": "Searching…",
+      "trimmode": 1
+    },
+    {
+      "id": "sf_prof",
+      "type": "scriptfilter",
+      "keyword": "{var:keyword_prof}",
+      "title": "Browser Profiles",
+      "subtext": "Open a browser in a profile, or a link with ⌘↩",
+      "script": "osascript -l JavaScript ./browserhub.js prof \"$1\"",
+      "running": "Searching…"
+    },
+    {
+      "id": "sf_openin",
+      "type": "scriptfilter",
+      "keyword": "{var:keyword_openin}",
+      "title": "Open Link In…",
+      "subtext": "Open the current tab, a copied or typed link in another browser",
+      "script": "osascript -l JavaScript ./browserhub.js openin \"$1\"",
+      "running": "Searching…"
+    },
+    {
+      "id": "sf_browsers",
+      "type": "scriptfilter",
+      "keyword": "{var:keyword_browsers}",
+      "title": "Browser Hub Index",
+      "subtext": "Indexed browsers · refresh or clear the index",
+      "script": "osascript -l JavaScript ./browserhub.js browsers \"$1\"",
+      "running": "Searching…"
+    },
+    {
+      "id": "ua_openin",
+      "type": "universalaction",
+      "name": "Open in Browser or Profile",
+      "urls": true,
+      "text": true
+    },
+    {
+      "id": "hk_openin",
+      "type": "hotkey",
+      "note": "Open the current tab in another browser or profile"
+    },
+    {
+      "id": "hk_web",
+      "type": "hotkey",
+      "note": "Search bookmarks and history"
+    },
+    {
+      "id": "act",
+      "type": "script",
+      "script": "osascript -l JavaScript ./browserhub.js action \"$1\"",
+      "note": "Open, launch, copy, refresh… (the action is in $bh_action)"
+    },
+    {
+      "id": "notify",
+      "type": "notification"
+    }
+  ],
+  "connections": [
+    {
+      "from": "sf_web",
+      "to": "act"
+    },
+    {
+      "from": "sf_web",
+      "to": "act",
+      "mod": "cmd"
+    },
+    {
+      "from": "sf_web",
+      "to": "act",
+      "mod": "alt"
+    },
+    {
+      "from": "sf_web",
+      "to": "act",
+      "mod": "ctrl"
+    },
+    {
+      "from": "sf_bmk",
+      "to": "act"
+    },
+    {
+      "from": "sf_bmk",
+      "to": "act",
+      "mod": "cmd"
+    },
+    {
+      "from": "sf_bmk",
+      "to": "act",
+      "mod": "alt"
+    },
+    {
+      "from": "sf_bmk",
+      "to": "act",
+      "mod": "ctrl"
+    },
+    {
+      "from": "sf_hist",
+      "to": "act"
+    },
+    {
+      "from": "sf_hist",
+      "to": "act",
+      "mod": "cmd"
+    },
+    {
+      "from": "sf_hist",
+      "to": "act",
+      "mod": "alt"
+    },
+    {
+      "from": "sf_hist",
+      "to": "act",
+      "mod": "ctrl"
+    },
+    {
+      "from": "sf_prof",
+      "to": "act"
+    },
+    {
+      "from": "sf_prof",
+      "to": "act",
+      "mod": "cmd"
+    },
+    {
+      "from": "sf_prof",
+      "to": "act",
+      "mod": "alt"
+    },
+    {
+      "from": "sf_prof",
+      "to": "act",
+      "mod": "ctrl"
+    },
+    {
+      "from": "sf_openin",
+      "to": "act"
+    },
+    {
+      "from": "sf_openin",
+      "to": "act",
+      "mod": "cmd"
+    },
+    {
+      "from": "sf_openin",
+      "to": "act",
+      "mod": "alt"
+    },
+    {
+      "from": "sf_openin",
+      "to": "act",
+      "mod": "ctrl"
+    },
+    {
+      "from": "sf_browsers",
+      "to": "act"
+    },
+    {
+      "from": "sf_browsers",
+      "to": "act",
+      "mod": "cmd"
+    },
+    {
+      "from": "sf_browsers",
+      "to": "act",
+      "mod": "alt"
+    },
+    {
+      "from": "sf_browsers",
+      "to": "act",
+      "mod": "ctrl"
+    },
+    {
+      "from": "ua_openin",
+      "to": "sf_openin"
+    },
+    {
+      "from": "hk_openin",
+      "to": "sf_openin"
+    },
+    {
+      "from": "hk_web",
+      "to": "sf_web"
+    },
+    {
+      "from": "act",
+      "to": "notify"
+    }
+  ]
+}
