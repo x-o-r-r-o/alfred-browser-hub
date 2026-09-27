@@ -1,6 +1,6 @@
 # Browser Hub — Plan
 
-**Bundle ID:** `io.github.x-o-r-r-o.browserhub` · **Keywords:** `web`, `bmk`, `webh`, `prof`, `openin`, `browsers` (all configurable)
+**Bundle ID:** `io.github.x-o-r-r-o.browser-hub` · **Keywords:** `web`, `bmk`, `webh`, `prof`, `openin`, `browsers` (all configurable)
 
 ## Why build it
 Raycast demand this workflow replaces (downloads, 2026-09-28):

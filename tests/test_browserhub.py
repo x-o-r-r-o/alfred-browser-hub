@@ -11,7 +11,7 @@ import json, os, plistlib, shutil, sqlite3, stat, subprocess, tempfile, time, un
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "src")
-PASTEBOARD = "io.github.x-o-r-r-o.browserhub.test"
+PASTEBOARD = "io.github.x-o-r-r-o.browser-hub.test"
 CONFIG_VARS = ("excluded_browsers", "index_history", "history_limit", "open_with")
 NOW = 1790000000  # 2026-09-21
 AS = ("Library", "Application Support")
@@ -929,6 +929,40 @@ class RuntimeTests(Base):
         write(os.path.join(home, ".sqliterc"), ".mode csv\n.headers off\n")
         self.assertIn("GitHub", self.titles("web", "github", HOME=home))
 
+    def raw(self, args, env):
+        """Run with exactly this environment (no harness defaults). Only the harmless unknown command
+        "nope" is run where the guard is expected to refuse, so a broken guard still reads nothing."""
+        out = subprocess.run(["/usr/bin/osascript", "-l", "JavaScript", "./browserhub.js", *args], cwd=SRC, env=env,
+                             capture_output=True, text=True, timeout=60)
+        return out.stdout.strip()
+
+    def test_test_mode_guard(self):
+        base = {"PATH": "/usr/bin:/bin", "HOME": os.environ.get("HOME", "/tmp"), "TMPDIR": os.environ.get("TMPDIR", "/tmp"),
+                "alfred_workflow_cache": self.cache}
+        cases = [
+            {"BH_TEST_NOW": str(NOW)},  # a test override without the fixture root
+            {"BH_TEST_NO_SPAWN": "1", "BH_TEST_ROOT": ""},
+            {"BH_TEST_ROOT": os.environ.get("HOME", "/Users")},  # the real home folder
+            {"BH_TEST_ROOT": "/"},
+            {"BH_TEST_ROOT": os.path.join(os.environ.get("HOME", "/Users"), "Library")},
+            {"BH_TEST_ROOT": os.path.join(self.tmp, "missing")},
+            {"BH_TEST_ROOT": self.root + "/../../.."},  # climbs out of the temporary folder
+        ]
+        for extra in cases:
+            out = json.loads(self.raw(["nope", ""], dict(base, **extra)))
+            self.assertEqual(out["items"][0]["title"], "Refused to run", extra)
+        self.assertTrue(self.raw(["action", ""], dict(base, BH_TEST_NOW="1")).startswith("Refused"))
+        self.assertEqual(self.titles("nope", "", index=False), ["Unknown command: nope"])  # a proper fixture root runs
+
+    def test_symlink_out_of_the_fixture_root_is_not_followed(self):
+        outside = os.path.join(self.tmp, "elsewhere")
+        write(os.path.join(outside, "Default", "Bookmarks"), chrome_bookmarks([("Escaped Bookmark", "https://escaped.example/")]))
+        os.makedirs(self.A("Vivaldi").rsplit("/", 1)[0], exist_ok=True)
+        os.symlink(outside, self.A("Vivaldi"))
+        self.apps["com.vivaldi.Vivaldi"] = "/Applications/Vivaldi.app"
+        self.assertNotIn("Escaped Bookmark", self.titles("web", "escaped"))
+        self.assertNotIn("Vivaldi", self.titles("browsers"))
+
     def test_unknown_command(self):
         self.assertEqual(self.titles("nope", "", index=False), ["Unknown command: nope"])
 
@@ -936,11 +970,11 @@ class RuntimeTests(Base):
         subprocess.run(["/usr/bin/python3", os.path.join(ROOT, "tools", "build.py"), "--check"], check=True, capture_output=True)
         with open(os.path.join(SRC, "info.plist"), "rb") as f:
             info = plistlib.load(f)
-        self.assertEqual(info["bundleid"], "io.github.x-o-r-r-o.browserhub")
+        self.assertEqual(info["bundleid"], "io.github.x-o-r-r-o.browser-hub")
         cfg = {c["variable"]: c for c in info["userconfigurationconfig"]}
         filters = [o for o in info["objects"] if o["type"] == "alfred.workflow.input.scriptfilter"]
         self.assertEqual(len(filters), 6)
-        taken = set("aitext anc ask audio bright case dev diff dls enc epoch font fredo gcal gdoc goo gtask gws hash hist icon img json jwt layout lin linact logo m365 media meet mic models nadd new nnew notes obb obd obm obn obs obv onenote outlook pomo race regex res shot ssh stock teams tldr tomd tra track trh uuid vid warp ytt".split())
+        taken = set("proj editin aitext anc ask audio bright case dev diff dls enc epoch font fredo gcal gdoc goo gtask gws hash hist icon img json jwt layout lin linact logo m365 media meet mic models nadd new nnew notes obb obd obm obn obs obv onenote outlook pomo race regex res shot ssh stock teams tldr tomd tra track trh uuid vid warp ytt".split())
         for o in filters:
             kw = o["config"]["keyword"]
             var = kw[5:-1]

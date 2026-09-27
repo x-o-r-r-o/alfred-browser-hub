@@ -15,7 +15,7 @@ function env(name, fallback) {
   return v.isNil() ? fallback : v.js;
 }
 const FM = $.NSFileManager.defaultManager;
-const BUNDLE = "io.github.x-o-r-r-o.browserhub";
+const BUNDLE = "io.github.x-o-r-r-o.browser-hub";
 const PID = $.NSProcessInfo.processInfo.processIdentifier;
 // Tests point BH_TEST_ROOT at a fixture tree: browser data is then read only from there, no real
 // app is detected or scripted, and nothing is opened (see isTest()).
@@ -23,6 +23,30 @@ const TEST_ROOT = env("BH_TEST_ROOT", "");
 const ROOT = TEST_ROOT || $.NSHomeDirectory().js;
 function isTest() {
   return TEST_ROOT !== "";
+}
+// Symlinks resolved, "//", "." and ".." collapsed ("/private" is dropped the same way on both sides)
+// (a path in an unreadable folder isn't resolved, and keeps its "/private": dropped here too)
+function resolved(p) {
+  return normPath($(String(p)).stringByResolvingSymlinksInPath.js).replace(/^\/private(?=\/(?:var|tmp|etc)(?:\/|$))/, "");
+}
+function inside(p, dir) {
+  const n = resolved(p), d = resolved(dir);
+  return n === d || n.startsWith(d === "/" ? "/" : d + "/");
+}
+// Hard test-mode guard: a test run (any BH_TEST_* variable) must have a fixture root that is a
+// folder inside the temporary folder, away from the home folder. Otherwise the script stops before
+// reading anything, so a test that forgets an override can never reach the real browser data.
+function testGuardError() {
+  const keys = ObjC.deepUnwrap(ENV.allKeys) || [];
+  const testRun = keys.some((k) => /^BH_TEST_/.test(k));
+  if (!testRun && !isTest()) return "";
+  if (!TEST_ROOT) return "Test mode without BH_TEST_ROOT";
+  const home = $.NSHomeDirectoryForUser($.NSUserName()).js;
+  const temps = [$.NSTemporaryDirectory().js, env("TMPDIR", ""), "/tmp", "/private/tmp"].filter(Boolean);
+  if (!temps.some((t) => inside(TEST_ROOT, t) && resolved(TEST_ROOT) !== resolved(t))) return "BH_TEST_ROOT isn’t inside the temporary folder";
+  if (inside(home, TEST_ROOT) || inside(TEST_ROOT, home)) return "BH_TEST_ROOT overlaps the home folder";
+  if (!isDir(TEST_ROOT)) return "BH_TEST_ROOT isn’t a folder";
+  return "";
 }
 
 const INDEX_VERSION = 2;
@@ -208,8 +232,7 @@ function basename(p) {
 // is ever read (a profiles.ini may point anywhere).
 function allowedPath(p) {
   if (!isTest()) return true;
-  const n = normPath(p), r = normPath(TEST_ROOT);
-  return n === r || n.startsWith(r + "/");
+  return inside(p, TEST_ROOT); // symlinks resolved: a fixture link can't lead out of the root
 }
 // "//", "." and ".." collapsed (stringByStandardizingPath would also drop "/private")
 function normPath(p) {
@@ -472,7 +495,7 @@ function defaultBrowserBundle() {
 
 function chromiumProfiles(b, root) {
   const out = [];
-  const ls = readJSON(`${root}/Local State`);
+  const ls = allowedPath(root) ? readJSON(`${root}/Local State`) : null;
   const cache = ls && ls.profile && ls.profile.info_cache && typeof ls.profile.info_cache === "object" ? ls.profile.info_cache : {};
   const order = ls && ls.profile && Array.isArray(ls.profile.profiles_order) ? ls.profile.profiles_order.filter((x) => typeof x === "string") : [];
   const dirs = [];
@@ -528,7 +551,7 @@ function parseINI(text) {
 
 function firefoxProfiles(b, root) {
   const out = [];
-  const secs = parseINI(readFile(`${root}/profiles.ini`));
+  const secs = allowedPath(root) ? parseINI(readFile(`${root}/profiles.ini`)) : [];
   const installDefaults = new Set(secs.filter((s) => /^Install/i.test(s.name) && s.values.Default).map((s) => s.values.Default));
   const profs = secs.filter((s) => /^Profile\d+$/i.test(s.name) && s.values.Path);
   const anyInstall = installDefaults.size > 0;
@@ -554,7 +577,7 @@ function discover() {
   const out = [];
   for (const b of BROWSERS) {
     const root = `${ROOT}/${b.dir}`;
-    if (!isDir(root)) continue;
+    if (!allowedPath(root) || !isDir(root)) continue;
     let list = [];
     if (b.family === "chromium") list = chromiumProfiles(b, root);
     else if (b.family === "firefox") list = firefoxProfiles(b, root);
@@ -656,7 +679,7 @@ function row(url, title, kind, folder, visits, last) {
 }
 
 function chromiumBookmarks(path) {
-  if (!exists(path)) return { rows: [] };
+  if (!allowedPath(path) || !exists(path)) return { rows: [] };
   const data = $.NSData.dataWithContentsOfFileOptionsError(path, 0, $());
   if (data.isNil()) return { error: FM.isReadableFileAtPath(path) ? "Couldn’t read the bookmarks" : "noaccess" };
   let j;
@@ -728,6 +751,7 @@ function firefoxPlaces(path, limit, wantHistory) {
 
 // Safari needs Full Disk Access (for Alfred) to read ~/Library/Safari
 function safariBookmarks(path) {
+  if (!allowedPath(path)) return { rows: [] };
   const dir = path.slice(0, path.lastIndexOf("/"));
   const err = $();
   const d = $.NSDictionary.dictionaryWithContentsOfURLError($.NSURL.fileURLWithPath(path), err);
@@ -1457,8 +1481,10 @@ function doAction(arg) {
       const id = env("bh_browser", "");
       if (!id) {
         if (!url) return "Couldn’t open it: no link";
-        // "open file:///…/Some.app" would launch it: file links always go to a browser
-        if (schemeOf(url) === "file") return openArgs(["-b", defaultBrowserBundle() || "com.apple.Safari", url]);
+        // "open file:///…/Some.app" would launch it, and other schemes (tel:, ftp:, an app's own
+        // links) would go to whatever app claims them: only web links are handed to LaunchServices,
+        // everything else from browser data goes to the default browser, like clicking it there
+        if (!/^https?$/.test(schemeOf(url))) return openArgs(["-b", defaultBrowserBundle() || "com.apple.Safari", url]);
         return openArgs([url]);
       }
       const b = BROWSER_BY_ID.get(id);
@@ -1508,6 +1534,12 @@ function fillMods(items) {
 function run(argv) {
   const [cmd, ...rest] = argv;
   const query = rest.join(" ");
+  const guard = testGuardError();
+  if (guard) {
+    // nothing is read, written or opened
+    if (cmd === "action" || cmd === "index" || cmd === "index-now") return `Refused: ${guard}`;
+    return JSON.stringify({ items: [{ title: "Refused to run", subtitle: guard, valid: false }] });
+  }
   try {
     let res;
     switch (cmd) {

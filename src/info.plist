@@ -3,29 +3,16 @@
 <plist version="1.0">
 <dict>
 	<key>bundleid</key>
-	<string>io.github.x-o-r-r-o.browserhub</string>
+	<string>io.github.x-o-r-r-o.browser-hub</string>
 	<key>category</key>
 	<string>Internet</string>
 	<key>connections</key>
 	<dict>
-		<key>1A2B2C39-8D27-5BB3-9397-4B0A34B85212</key>
+		<key>0C3086A4-C4FF-59EF-AFB0-9BBD24740540</key>
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>948B62F5-AE58-51BA-B8A7-1BFFF312B15E</string>
-				<key>modifiers</key>
-				<integer>0</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-		</array>
-		<key>4C8BD39B-D5FC-59BD-8B47-F1CC2BC8E6FF</key>
-		<array>
-			<dict>
-				<key>destinationuid</key>
-				<string>834D0AD6-9408-57CA-AA68-87D67B0BF204</string>
+				<string>6EBEFC09-3F90-540D-BD05-F66B15F8569E</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -35,7 +22,7 @@
 			</dict>
 			<dict>
 				<key>destinationuid</key>
-				<string>834D0AD6-9408-57CA-AA68-87D67B0BF204</string>
+				<string>6EBEFC09-3F90-540D-BD05-F66B15F8569E</string>
 				<key>modifiers</key>
 				<integer>1048576</integer>
 				<key>modifiersubtext</key>
@@ -45,7 +32,7 @@
 			</dict>
 			<dict>
 				<key>destinationuid</key>
-				<string>834D0AD6-9408-57CA-AA68-87D67B0BF204</string>
+				<string>6EBEFC09-3F90-540D-BD05-F66B15F8569E</string>
 				<key>modifiers</key>
 				<integer>524288</integer>
 				<key>modifiersubtext</key>
@@ -55,7 +42,7 @@
 			</dict>
 			<dict>
 				<key>destinationuid</key>
-				<string>834D0AD6-9408-57CA-AA68-87D67B0BF204</string>
+				<string>6EBEFC09-3F90-540D-BD05-F66B15F8569E</string>
 				<key>modifiers</key>
 				<integer>262144</integer>
 				<key>modifiersubtext</key>
@@ -64,11 +51,11 @@
 				<false/>
 			</dict>
 		</array>
-		<key>50E2A752-3C41-511D-BB27-B4FA03B5BD89</key>
+		<key>282FDE85-CB46-5AF5-BC71-B9EB2CD5CE95</key>
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>834D0AD6-9408-57CA-AA68-87D67B0BF204</string>
+				<string>6EBEFC09-3F90-540D-BD05-F66B15F8569E</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -78,7 +65,7 @@
 			</dict>
 			<dict>
 				<key>destinationuid</key>
-				<string>834D0AD6-9408-57CA-AA68-87D67B0BF204</string>
+				<string>6EBEFC09-3F90-540D-BD05-F66B15F8569E</string>
 				<key>modifiers</key>
 				<integer>1048576</integer>
 				<key>modifiersubtext</key>
@@ -88,7 +75,7 @@
 			</dict>
 			<dict>
 				<key>destinationuid</key>
-				<string>834D0AD6-9408-57CA-AA68-87D67B0BF204</string>
+				<string>6EBEFC09-3F90-540D-BD05-F66B15F8569E</string>
 				<key>modifiers</key>
 				<integer>524288</integer>
 				<key>modifiersubtext</key>
@@ -98,7 +85,7 @@
 			</dict>
 			<dict>
 				<key>destinationuid</key>
-				<string>834D0AD6-9408-57CA-AA68-87D67B0BF204</string>
+				<string>6EBEFC09-3F90-540D-BD05-F66B15F8569E</string>
 				<key>modifiers</key>
 				<integer>262144</integer>
 				<key>modifiersubtext</key>
@@ -107,24 +94,11 @@
 				<false/>
 			</dict>
 		</array>
-		<key>834D0AD6-9408-57CA-AA68-87D67B0BF204</key>
+		<key>691F7C39-0170-503C-B919-51270BF0760E</key>
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>AD588143-47C0-5972-BA4F-88BC50CA0D81</string>
-				<key>modifiers</key>
-				<integer>0</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-		</array>
-		<key>948B62F5-AE58-51BA-B8A7-1BFFF312B15E</key>
-		<array>
-			<dict>
-				<key>destinationuid</key>
-				<string>834D0AD6-9408-57CA-AA68-87D67B0BF204</string>
+				<string>6EBEFC09-3F90-540D-BD05-F66B15F8569E</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -134,7 +108,7 @@
 			</dict>
 			<dict>
 				<key>destinationuid</key>
-				<string>834D0AD6-9408-57CA-AA68-87D67B0BF204</string>
+				<string>6EBEFC09-3F90-540D-BD05-F66B15F8569E</string>
 				<key>modifiers</key>
 				<integer>1048576</integer>
 				<key>modifiersubtext</key>
@@ -144,7 +118,7 @@
 			</dict>
 			<dict>
 				<key>destinationuid</key>
-				<string>834D0AD6-9408-57CA-AA68-87D67B0BF204</string>
+				<string>6EBEFC09-3F90-540D-BD05-F66B15F8569E</string>
 				<key>modifiers</key>
 				<integer>524288</integer>
 				<key>modifiersubtext</key>
@@ -154,7 +128,7 @@
 			</dict>
 			<dict>
 				<key>destinationuid</key>
-				<string>834D0AD6-9408-57CA-AA68-87D67B0BF204</string>
+				<string>6EBEFC09-3F90-540D-BD05-F66B15F8569E</string>
 				<key>modifiers</key>
 				<integer>262144</integer>
 				<key>modifiersubtext</key>
@@ -163,11 +137,11 @@
 				<false/>
 			</dict>
 		</array>
-		<key>9EC8441B-C451-5537-8039-8DBBF23580FB</key>
+		<key>6EBEFC09-3F90-540D-BD05-F66B15F8569E</key>
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>50E2A752-3C41-511D-BB27-B4FA03B5BD89</string>
+				<string>1CD56936-6994-5970-8DD3-B71815A653AC</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -176,11 +150,24 @@
 				<false/>
 			</dict>
 		</array>
-		<key>BAA8DC70-288E-5E9D-AC7D-95A39BBC3280</key>
+		<key>9CDF8CF5-1BD4-5216-9154-E9F63FAE7235</key>
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>834D0AD6-9408-57CA-AA68-87D67B0BF204</string>
+				<string>A51805A7-9803-5CB5-9EB1-71262331638F</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>A51805A7-9803-5CB5-9EB1-71262331638F</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>6EBEFC09-3F90-540D-BD05-F66B15F8569E</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -190,7 +177,7 @@
 			</dict>
 			<dict>
 				<key>destinationuid</key>
-				<string>834D0AD6-9408-57CA-AA68-87D67B0BF204</string>
+				<string>6EBEFC09-3F90-540D-BD05-F66B15F8569E</string>
 				<key>modifiers</key>
 				<integer>1048576</integer>
 				<key>modifiersubtext</key>
@@ -200,7 +187,7 @@
 			</dict>
 			<dict>
 				<key>destinationuid</key>
-				<string>834D0AD6-9408-57CA-AA68-87D67B0BF204</string>
+				<string>6EBEFC09-3F90-540D-BD05-F66B15F8569E</string>
 				<key>modifiers</key>
 				<integer>524288</integer>
 				<key>modifiersubtext</key>
@@ -210,7 +197,7 @@
 			</dict>
 			<dict>
 				<key>destinationuid</key>
-				<string>834D0AD6-9408-57CA-AA68-87D67B0BF204</string>
+				<string>6EBEFC09-3F90-540D-BD05-F66B15F8569E</string>
 				<key>modifiers</key>
 				<integer>262144</integer>
 				<key>modifiersubtext</key>
@@ -219,24 +206,11 @@
 				<false/>
 			</dict>
 		</array>
-		<key>D71FBB1B-2714-5143-9201-F016B0DFC25B</key>
+		<key>AF31F51C-EC1E-50F7-BCAA-B61895D5C105</key>
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>948B62F5-AE58-51BA-B8A7-1BFFF312B15E</string>
-				<key>modifiers</key>
-				<integer>0</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-		</array>
-		<key>EE4F6783-BC6C-5B9D-8608-175A8511CC17</key>
-		<array>
-			<dict>
-				<key>destinationuid</key>
-				<string>834D0AD6-9408-57CA-AA68-87D67B0BF204</string>
+				<string>6EBEFC09-3F90-540D-BD05-F66B15F8569E</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -246,7 +220,7 @@
 			</dict>
 			<dict>
 				<key>destinationuid</key>
-				<string>834D0AD6-9408-57CA-AA68-87D67B0BF204</string>
+				<string>6EBEFC09-3F90-540D-BD05-F66B15F8569E</string>
 				<key>modifiers</key>
 				<integer>1048576</integer>
 				<key>modifiersubtext</key>
@@ -256,7 +230,7 @@
 			</dict>
 			<dict>
 				<key>destinationuid</key>
-				<string>834D0AD6-9408-57CA-AA68-87D67B0BF204</string>
+				<string>6EBEFC09-3F90-540D-BD05-F66B15F8569E</string>
 				<key>modifiers</key>
 				<integer>524288</integer>
 				<key>modifiersubtext</key>
@@ -266,7 +240,7 @@
 			</dict>
 			<dict>
 				<key>destinationuid</key>
-				<string>834D0AD6-9408-57CA-AA68-87D67B0BF204</string>
+				<string>6EBEFC09-3F90-540D-BD05-F66B15F8569E</string>
 				<key>modifiers</key>
 				<integer>262144</integer>
 				<key>modifiersubtext</key>
@@ -275,11 +249,37 @@
 				<false/>
 			</dict>
 		</array>
-		<key>F6CE9880-22DA-52B2-9431-798E2B965551</key>
+		<key>E7CAB961-9C81-5C58-BA47-C3E5DC6D7711</key>
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>834D0AD6-9408-57CA-AA68-87D67B0BF204</string>
+				<string>A51805A7-9803-5CB5-9EB1-71262331638F</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>FAFE1ABE-CCD7-54BE-B46D-8057D459365D</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>691F7C39-0170-503C-B919-51270BF0760E</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>FCCB9D29-A52D-5046-971C-F080EFEE2E67</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>6EBEFC09-3F90-540D-BD05-F66B15F8569E</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -289,7 +289,7 @@
 			</dict>
 			<dict>
 				<key>destinationuid</key>
-				<string>834D0AD6-9408-57CA-AA68-87D67B0BF204</string>
+				<string>6EBEFC09-3F90-540D-BD05-F66B15F8569E</string>
 				<key>modifiers</key>
 				<integer>1048576</integer>
 				<key>modifiersubtext</key>
@@ -299,7 +299,7 @@
 			</dict>
 			<dict>
 				<key>destinationuid</key>
-				<string>834D0AD6-9408-57CA-AA68-87D67B0BF204</string>
+				<string>6EBEFC09-3F90-540D-BD05-F66B15F8569E</string>
 				<key>modifiers</key>
 				<integer>524288</integer>
 				<key>modifiersubtext</key>
@@ -309,7 +309,7 @@
 			</dict>
 			<dict>
 				<key>destinationuid</key>
-				<string>834D0AD6-9408-57CA-AA68-87D67B0BF204</string>
+				<string>6EBEFC09-3F90-540D-BD05-F66B15F8569E</string>
 				<key>modifiers</key>
 				<integer>262144</integer>
 				<key>modifiersubtext</key>
@@ -376,7 +376,7 @@
 			<key>type</key>
 			<string>alfred.workflow.input.scriptfilter</string>
 			<key>uid</key>
-			<string>50E2A752-3C41-511D-BB27-B4FA03B5BD89</string>
+			<string>691F7C39-0170-503C-B919-51270BF0760E</string>
 			<key>version</key>
 			<integer>3</integer>
 		</dict>
@@ -427,7 +427,7 @@
 			<key>type</key>
 			<string>alfred.workflow.input.scriptfilter</string>
 			<key>uid</key>
-			<string>EE4F6783-BC6C-5B9D-8608-175A8511CC17</string>
+			<string>FCCB9D29-A52D-5046-971C-F080EFEE2E67</string>
 			<key>version</key>
 			<integer>3</integer>
 		</dict>
@@ -478,7 +478,7 @@
 			<key>type</key>
 			<string>alfred.workflow.input.scriptfilter</string>
 			<key>uid</key>
-			<string>4C8BD39B-D5FC-59BD-8B47-F1CC2BC8E6FF</string>
+			<string>AF31F51C-EC1E-50F7-BCAA-B61895D5C105</string>
 			<key>version</key>
 			<integer>3</integer>
 		</dict>
@@ -529,7 +529,7 @@
 			<key>type</key>
 			<string>alfred.workflow.input.scriptfilter</string>
 			<key>uid</key>
-			<string>F6CE9880-22DA-52B2-9431-798E2B965551</string>
+			<string>282FDE85-CB46-5AF5-BC71-B9EB2CD5CE95</string>
 			<key>version</key>
 			<integer>3</integer>
 		</dict>
@@ -580,7 +580,7 @@
 			<key>type</key>
 			<string>alfred.workflow.input.scriptfilter</string>
 			<key>uid</key>
-			<string>948B62F5-AE58-51BA-B8A7-1BFFF312B15E</string>
+			<string>A51805A7-9803-5CB5-9EB1-71262331638F</string>
 			<key>version</key>
 			<integer>3</integer>
 		</dict>
@@ -631,7 +631,7 @@
 			<key>type</key>
 			<string>alfred.workflow.input.scriptfilter</string>
 			<key>uid</key>
-			<string>BAA8DC70-288E-5E9D-AC7D-95A39BBC3280</string>
+			<string>0C3086A4-C4FF-59EF-AFB0-9BBD24740540</string>
 			<key>version</key>
 			<integer>3</integer>
 		</dict>
@@ -652,7 +652,7 @@
 			<key>type</key>
 			<string>alfred.workflow.trigger.universalaction</string>
 			<key>uid</key>
-			<string>1A2B2C39-8D27-5BB3-9397-4B0A34B85212</string>
+			<string>9CDF8CF5-1BD4-5216-9154-E9F63FAE7235</string>
 			<key>version</key>
 			<integer>1</integer>
 		</dict>
@@ -683,7 +683,7 @@
 			<key>type</key>
 			<string>alfred.workflow.trigger.hotkey</string>
 			<key>uid</key>
-			<string>D71FBB1B-2714-5143-9201-F016B0DFC25B</string>
+			<string>E7CAB961-9C81-5C58-BA47-C3E5DC6D7711</string>
 			<key>version</key>
 			<integer>2</integer>
 		</dict>
@@ -714,7 +714,7 @@
 			<key>type</key>
 			<string>alfred.workflow.trigger.hotkey</string>
 			<key>uid</key>
-			<string>9EC8441B-C451-5537-8039-8DBBF23580FB</string>
+			<string>FAFE1ABE-CCD7-54BE-B46D-8057D459365D</string>
 			<key>version</key>
 			<integer>2</integer>
 		</dict>
@@ -737,7 +737,7 @@
 			<key>type</key>
 			<string>alfred.workflow.action.script</string>
 			<key>uid</key>
-			<string>834D0AD6-9408-57CA-AA68-87D67B0BF204</string>
+			<string>6EBEFC09-3F90-540D-BD05-F66B15F8569E</string>
 			<key>version</key>
 			<integer>2</integer>
 		</dict>
@@ -758,7 +758,7 @@
 			<key>type</key>
 			<string>alfred.workflow.output.notification</string>
 			<key>uid</key>
-			<string>AD588143-47C0-5972-BA4F-88BC50CA0D81</string>
+			<string>1CD56936-6994-5970-8DD3-B71815A653AC</string>
 			<key>version</key>
 			<integer>1</integer>
 		</dict>
@@ -802,28 +802,35 @@ Leave browsers or single profiles out of the index, stop indexing history, or ch
 </string>
 	<key>uidata</key>
 	<dict>
-		<key>1A2B2C39-8D27-5BB3-9397-4B0A34B85212</key>
+		<key>0C3086A4-C4FF-59EF-AFB0-9BBD24740540</key>
 		<dict>
 			<key>xpos</key>
 			<integer>30</integer>
 			<key>ypos</key>
-			<integer>540</integer>
+			<integer>410</integer>
 		</dict>
-		<key>4C8BD39B-D5FC-59BD-8B47-F1CC2BC8E6FF</key>
+		<key>1CD56936-6994-5970-8DD3-B71815A653AC</key>
+		<dict>
+			<key>xpos</key>
+			<integer>690</integer>
+			<key>ypos</key>
+			<integer>20</integer>
+		</dict>
+		<key>282FDE85-CB46-5AF5-BC71-B9EB2CD5CE95</key>
 		<dict>
 			<key>xpos</key>
 			<integer>30</integer>
 			<key>ypos</key>
-			<integer>150</integer>
+			<integer>280</integer>
 		</dict>
-		<key>50E2A752-3C41-511D-BB27-B4FA03B5BD89</key>
+		<key>691F7C39-0170-503C-B919-51270BF0760E</key>
 		<dict>
 			<key>xpos</key>
 			<integer>250</integer>
 			<key>ypos</key>
 			<integer>20</integer>
 		</dict>
-		<key>834D0AD6-9408-57CA-AA68-87D67B0BF204</key>
+		<key>6EBEFC09-3F90-540D-BD05-F66B15F8569E</key>
 		<dict>
 			<key>note</key>
 			<string>Open, launch, copy, refresh… (the action is in $bh_action)</string>
@@ -832,37 +839,28 @@ Leave browsers or single profiles out of the index, stop indexing history, or ch
 			<key>ypos</key>
 			<integer>20</integer>
 		</dict>
-		<key>948B62F5-AE58-51BA-B8A7-1BFFF312B15E</key>
+		<key>9CDF8CF5-1BD4-5216-9154-E9F63FAE7235</key>
+		<dict>
+			<key>xpos</key>
+			<integer>30</integer>
+			<key>ypos</key>
+			<integer>540</integer>
+		</dict>
+		<key>A51805A7-9803-5CB5-9EB1-71262331638F</key>
 		<dict>
 			<key>xpos</key>
 			<integer>250</integer>
 			<key>ypos</key>
 			<integer>150</integer>
 		</dict>
-		<key>9EC8441B-C451-5537-8039-8DBBF23580FB</key>
-		<dict>
-			<key>note</key>
-			<string>Search bookmarks and history</string>
-			<key>xpos</key>
-			<integer>30</integer>
-			<key>ypos</key>
-			<integer>800</integer>
-		</dict>
-		<key>AD588143-47C0-5972-BA4F-88BC50CA0D81</key>
-		<dict>
-			<key>xpos</key>
-			<integer>690</integer>
-			<key>ypos</key>
-			<integer>20</integer>
-		</dict>
-		<key>BAA8DC70-288E-5E9D-AC7D-95A39BBC3280</key>
+		<key>AF31F51C-EC1E-50F7-BCAA-B61895D5C105</key>
 		<dict>
 			<key>xpos</key>
 			<integer>30</integer>
 			<key>ypos</key>
-			<integer>410</integer>
+			<integer>150</integer>
 		</dict>
-		<key>D71FBB1B-2714-5143-9201-F016B0DFC25B</key>
+		<key>E7CAB961-9C81-5C58-BA47-C3E5DC6D7711</key>
 		<dict>
 			<key>note</key>
 			<string>Open the current tab in another browser or profile</string>
@@ -871,19 +869,21 @@ Leave browsers or single profiles out of the index, stop indexing history, or ch
 			<key>ypos</key>
 			<integer>670</integer>
 		</dict>
-		<key>EE4F6783-BC6C-5B9D-8608-175A8511CC17</key>
+		<key>FAFE1ABE-CCD7-54BE-B46D-8057D459365D</key>
+		<dict>
+			<key>note</key>
+			<string>Search bookmarks and history</string>
+			<key>xpos</key>
+			<integer>30</integer>
+			<key>ypos</key>
+			<integer>800</integer>
+		</dict>
+		<key>FCCB9D29-A52D-5046-971C-F080EFEE2E67</key>
 		<dict>
 			<key>xpos</key>
 			<integer>30</integer>
 			<key>ypos</key>
 			<integer>20</integer>
-		</dict>
-		<key>F6CE9880-22DA-52B2-9431-798E2B965551</key>
-		<dict>
-			<key>xpos</key>
-			<integer>30</integer>
-			<key>ypos</key>
-			<integer>280</integer>
 		</dict>
 	</dict>
 	<key>userconfigurationconfig</key>
