@@ -12,7 +12,7 @@ import json, os, plistlib, shutil, sqlite3, stat, subprocess, tempfile, time, un
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "src")
 PASTEBOARD = "io.github.x-o-r-r-o.browser-hub.test"
-CONFIG_VARS = ("excluded_browsers", "index_history", "history_limit", "open_with")
+CONFIG_VARS = ("excluded_browsers", "index_history", "history_limit", "open_with", "hidden_apps", "link_apps")
 NOW = 1790000000  # 2026-09-21
 AS = ("Library", "Application Support")
 
@@ -109,6 +109,21 @@ def safari_bookmarks():
         lst("BookmarksMenu", [leaf("GitHub from Safari", "https://github.com")]),
         lst("com.apple.ReadingList", [leaf("Long Read", "https://read.example/article")]),
     ]), fmt=plistlib.FMT_BINARY)
+
+
+def make_app(path, bundle, schemes=("http", "https"), html="uti"):
+    """A fake .app bundle with just an Info.plist (for the scan of apps that open web links)"""
+    info = {"CFBundleIdentifier": bundle, "CFBundleURLTypes": [{"CFBundleURLName": "Web site URL", "CFBundleURLSchemes": list(schemes)}]}
+    if html == "uti":
+        info["CFBundleDocumentTypes"] = [{"LSItemContentTypes": ["public.html"], "CFBundleTypeRole": "Viewer"}]
+    elif html == "ext":
+        info["CFBundleDocumentTypes"] = [{"CFBundleTypeExtensions": ["html", "htm"], "CFBundleTypeRole": "Viewer"}]
+    elif html == "none-role":
+        info["CFBundleDocumentTypes"] = [{"LSItemContentTypes": ["public.html"], "CFBundleTypeRole": "None"}]
+    else:
+        info["CFBundleDocumentTypes"] = [{"LSItemContentTypes": ["public.torrent"], "CFBundleTypeRole": "Viewer"}]
+    write(os.path.join(path, "Contents", "Info.plist"), plistlib.dumps(info))
+    return path
 
 
 def read_pasteboard():
@@ -767,6 +782,143 @@ class OpenInTests(Base):
             self.assertEqual(items[0]["title"], "No link to open", q)
 
 
+class MoreBrowsersTests(Base):
+    """Brave Origin and the other browsers added in 1.0.1, and every other app that opens web links"""
+
+    def apps_dir(self, *parts):
+        return os.path.join(self.root, "Applications", *parts)
+
+    def url_apps(self):
+        foo = make_app(self.apps_dir("Foo Browser.app"), "com.example.foo")
+        ext = make_app(self.apps_dir("Old Browser.app"), "com.example.old", html="ext")
+        folx = make_app(self.apps_dir("Folx.app"), "com.eltima.Folx3", html=None)
+        norole = make_app(self.apps_dir("Role None.app"), "com.example.norole", html="none-role")
+        alfred = make_app(self.apps_dir("Alfred 5.app"), "com.runningwithcrayons.Alfred")
+        safari = make_app(self.apps_dir("Safari.app"), "com.apple.Safari")  # in BROWSERS: listed once
+        dup = make_app(os.path.join(self.root, "Other", "Foo Browser.app"), "com.example.foo")
+        trash = make_app(os.path.join(self.root, ".Trash", "Trashed.app"), "com.example.trashed")
+        outside = make_app(os.path.join(self.tmp, "outside", "Outside.app"), "com.example.outside")
+        return ",".join([foo, ext, folx, norole, alfred, safari, dup, trash, outside])
+
+    def test_brave_origin_is_found_everywhere(self):
+        bo = self.A("BraveSoftware", "Brave-Origin")
+        write(os.path.join(bo, "Local State"), json.dumps({"profile": {"info_cache": {"Default": {"name": "Origin Home"}, "Profile 2": {"name": "Origin Work"}}}}))
+        write(os.path.join(bo, "Default", "Bookmarks"), chrome_bookmarks([("Origin Bookmark", "https://origin.example/")]))
+        make_chrome_history(os.path.join(bo, "Profile 2", "History"), [("https://origin-work.example/", "Origin Work Page", 3, 100)])
+        self.apps = {"com.brave.Browser.origin": "/Applications/Brave Origin.app", "com.apple.Safari": "/Applications/Safari.app"}
+        it = self.find(self.items("bmk", "origin"), "Origin Bookmark")
+        self.assertEqual(it["variables"]["bh_browser"], "braveorigin")
+        self.assertEqual(it["icon"], {"type": "fileicon", "path": "/Applications/Brave Origin.app"})
+        self.assertIn("Origin Work Page", self.titles("hist", "@braveorigin @originwork page"))
+        titles = self.titles("openin", "https://x.example/", index=False)
+        for t in ("Brave Origin", "Brave Origin · Origin Home", "Brave Origin · Origin Work", "Safari"):
+            self.assertIn(t, titles)
+        self.assertNotIn("Brave Browser", titles)  # plain Brave isn't installed here
+        self.assertIn("Origin Work", self.titles("prof", "origin", index=False))
+        self.assertIn("Brave Origin · Origin Home", self.titles("browsers"))
+        self.assertEqual(self.action("", bh_action="private", bh_url="https://x.example/", bh_browser="braveorigin", bh_profile="Profile 2"),
+                         'open ["-n","-b","com.brave.Browser.origin","--args","--profile-directory=Profile 2","--incognito","https://x.example/"]')
+
+    def test_other_chromium_browsers(self):
+        write(self.A("Yandex", "YandexBrowser", "Default", "Bookmarks"), chrome_bookmarks([("Yandex Bookmark", "https://ya.example/")]))
+        write(self.A("Thorium", "Default", "Bookmarks"), chrome_bookmarks([("Thorium Bookmark", "https://thorium.example/")]))
+        write(self.A("com.operasoftware.OperaAir", "Default", "Bookmarks"), chrome_bookmarks([("Air Bookmark", "https://air.example/")]))
+        write(self.A("Vivaldi Snapshot", "Default", "Bookmarks"), chrome_bookmarks([("Snapshot Bookmark", "https://snap.example/")]))
+        for title, bid in (("Yandex Bookmark", "yandex"), ("Thorium Bookmark", "thorium"), ("Air Bookmark", "operaair"), ("Snapshot Bookmark", "vivaldisnapshot")):
+            self.assertEqual(self.find(self.items("bmk", title.split()[0]), title)["variables"]["bh_browser"], bid)
+
+    def test_open_only_browsers_are_never_read(self):
+        # data folders of open-only browsers exist, but nothing in them is indexed or listed as a profile
+        write(self.A("TorBrowser-Data", "Browser", "profile.default", "places.sqlite"), b"not read")
+        make_places(self.A("MullvadBrowser", "Browser", "x.default", "places.sqlite"), [(1, "https://mullvad-secret.example/", "Mullvad Secret", 1, 10)], [])
+        write(self.A("Orion", "Defaults", "favourites.plist"), b"not read")
+        self.apps.update({"com.kagi.kagimacOS": "/Applications/Orion.app", "org.torproject.torbrowser": "/Applications/Tor Browser.app",
+                          "net.mullvad.mullvadbrowser": "/Applications/Mullvad Browser.app"})
+        self.assertNotIn("Mullvad Secret", self.titles("web", "mullvad"))
+        items = self.items("browsers")
+        for name in ("Orion", "Tor Browser", "Mullvad Browser"):
+            self.assertIn("aren’t read", self.find(items, name)["subtitle"])
+        titles = self.titles("openin", "https://x.example/", index=False)
+        for name in ("Orion", "Tor Browser", "Mullvad Browser"):
+            self.assertIn(name, titles)
+        self.assertNotIn("Orion", " ".join(self.titles("prof", "", index=False)))
+        o = self.find(self.items("openin", "orion https://x.example/", index=False), "Orion")
+        self.assertIs(o["mods"]["cmd"]["valid"], False)
+        self.assertEqual(self.action("", bh_action="open", bh_url="https://x.example/", bh_browser="tor", bh_profile="whatever"),
+                         'open ["-b","org.torproject.torbrowser","https://x.example/"]')
+        self.assertEqual(self.action("", bh_action="open", bh_url="https://x.example/", bh_browser="orion"), 'open ["-b","com.kagi.kagimacOS","https://x.example/"]')
+
+    def test_other_apps_that_open_web_links(self):
+        apps = self.url_apps()
+        items = self.items("openin", "https://x.example/", index=False, BH_TEST_URL_APPS=apps)
+        titles = [i["title"] for i in items]
+        self.assertIn("Foo Browser", titles)
+        self.assertIn("Old Browser", titles)  # declares .html by extension, like Safari
+        self.assertEqual(titles.count("Foo Browser"), 1)  # a second copy isn't listed twice
+        self.assertEqual(titles.count("Safari"), 1)
+        for t in ("Folx", "Role None", "Alfred 5", "Trashed", "Outside"):
+            self.assertNotIn(t, titles)
+        foo = self.find(items, "Foo Browser")
+        self.assertEqual(foo["variables"], {"bh_action": "open", "bh_browser": "app:com.example.foo", "bh_profile": "", "bh_url": "https://x.example/"})
+        self.assertTrue(foo["icon"]["path"].endswith("Applications/Foo Browser.app"))
+        self.assertIs(foo["mods"]["cmd"]["valid"], False)  # no private window
+        self.assertEqual(self.titles("openin", "https://x.example/ example.foo", index=False, BH_TEST_URL_APPS=apps)[1:], ["Foo Browser"])  # bundle id matches
+        # link apps (download managers) only when asked for
+        items = self.items("openin", "https://x.example/", index=False, BH_TEST_URL_APPS=apps, link_apps="1")
+        self.assertEqual(self.find(items, "Folx")["subtitle"], "Takes links (not a web browser) · ↩ Open the link here")
+        # hidden by name or bundle id, for every app (Safari too)
+        t = self.titles("openin", "https://x.example/", index=False, BH_TEST_URL_APPS=apps, link_apps="1", hidden_apps="foo browser, com.eltima.Folx3,SAFARI")
+        for name in ("Foo Browser", "Folx", "Safari"):
+            self.assertNotIn(name, t)
+        self.assertIn("Old Browser", t)
+        # the default browser can be one of them
+        self.assertEqual(self.titles("openin", "https://x.example/", index=False, BH_TEST_URL_APPS=apps, BH_TEST_DEFAULT_BROWSER="com.example.foo")[1], "Foo Browser")
+
+    def test_other_apps_in_browsers(self):
+        apps = self.url_apps()
+        items = self.items("browsers", "", BH_TEST_URL_APPS=apps)
+        foo = self.find(items, "Foo Browser")
+        self.assertEqual(foo["subtitle"], "Opens links via openin · com.example.foo · nothing is indexed")
+        self.assertNotIn("Folx", [i["title"] for i in items])
+        self.assertEqual(self.find(self.items("browsers", "folx", BH_TEST_URL_APPS=apps, link_apps="1"), "Folx")["subtitle"],
+                         "Takes links via openin · com.eltima.Folx3 · nothing is indexed")
+        self.assertNotIn("Foo Browser", self.titles("browsers", "", BH_TEST_URL_APPS=apps, hidden_apps="Foo Browser"))
+        self.assertEqual(items[-1]["title"], "Clear the index")
+
+    def test_other_app_actions(self):
+        apps = self.url_apps()
+        a = dict(BH_TEST_URL_APPS=apps, bh_browser="app:com.example.foo")
+        self.assertEqual(self.action("", bh_action="open", bh_url="https://x.example/", **a), 'open ["-b","com.example.foo","https://x.example/"]')
+        self.assertEqual(self.action("", bh_action="launch", bh_url="", **a), 'open ["-b","com.example.foo"]')
+        self.assertEqual(self.action("", bh_action="private", bh_url="https://x.example/", **a), "Couldn’t open Foo Browser in a private window")
+        self.assertEqual(self.action("", bh_action="open", bh_url="javascript:alert(1)", **a), "Couldn’t open it: no link")
+        # only an app the scan lists (a crafted variable can't open any bundle id)
+        for bad in ("app:com.apple.Terminal", "app:com.runningwithcrayons.Alfred", "app:", "app:com.example.outside"):
+            self.assertEqual(self.action("", bh_action="open", bh_url="https://x.example/", BH_TEST_URL_APPS=apps, bh_browser=bad),
+                             "Couldn’t open it: that app no longer opens web links", bad)
+
+    def test_app_scan_is_cached(self):
+        foo = make_app(self.apps_dir("Foo Browser.app"), "com.example.foo")
+        bar = make_app(self.apps_dir("Bar Browser.app"), "com.example.bar")
+        apps = ",".join([foo, bar])
+        self.assertIn("Bar Browser", self.titles("openin", "", index=False, BH_TEST_URL_APPS=apps))
+        self.assertIn("apps.json", self.cache_files())
+        shutil.rmtree(bar)  # uninstalled: the cached scan still lists it for a few minutes
+        self.assertIn("Bar Browser", self.titles("openin", "", index=False, BH_TEST_URL_APPS=apps, BH_TEST_NOW=NOW + 60))
+        self.assertNotIn("Bar Browser", self.titles("openin", "", index=False, BH_TEST_URL_APPS=apps, BH_TEST_NOW=NOW + 400))
+        # Refresh the index scans the apps again at once
+        make_app(bar, "com.example.bar")
+        self.assertNotIn("Bar Browser", self.titles("openin", "", index=False, BH_TEST_URL_APPS=apps, BH_TEST_NOW=NOW + 410))
+        self.action("", bh_action="refresh", BH_TEST_URL_APPS=apps, BH_TEST_NOW=NOW + 410)
+        self.assertIn("Bar Browser", self.titles("openin", "", index=False, BH_TEST_URL_APPS=apps, BH_TEST_NOW=NOW + 420))
+        # a damaged cache file is ignored
+        write(os.path.join(self.cache, "apps.json"), "{not json")
+        self.assertIn("Foo Browser", self.titles("openin", "", index=False, BH_TEST_URL_APPS=apps, BH_TEST_NOW=NOW + 430))
+        # Clear the index deletes it too
+        self.action("", bh_action="clear")
+        self.assertNotIn("apps.json", self.cache_files())
+
+
 # ---------- status, actions ----------
 
 class BrowsersTests(Base):
@@ -1122,7 +1274,8 @@ class RuntimeTests(Base):
         os.symlink(outside, self.A("Vivaldi"))
         self.apps["com.vivaldi.Vivaldi"] = "/Applications/Vivaldi.app"
         self.assertNotIn("Escaped Bookmark", self.titles("web", "escaped"))
-        self.assertNotIn("Vivaldi", self.titles("browsers"))
+        # installed, so listed, but with nothing read through the link
+        self.assertEqual(self.find(self.items("browsers"), "Vivaldi")["subtitle"], "No bookmarks or history found")
 
     def test_unknown_command(self):
         self.assertEqual(self.titles("nope", "", index=False), ["Unknown command: nope"])

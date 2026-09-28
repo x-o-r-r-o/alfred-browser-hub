@@ -8,7 +8,7 @@ Safari keeps its bookmarks and history in a protected folder. To include Safari,
 
 ## Usage
 
-Search bookmarks and history of all your browsers via the `web` keyword. Chrome (every channel), Arc (pinned tabs and Favorites), Brave, Edge, Vivaldi, Opera, Dia, Comet, Helium, ChatGPT Atlas, Firefox, Zen, LibreWolf, Floorp, Waterfox and Safari are found automatically, with all their profiles, including bookmarks saved to your Google Account and Safari profiles. A page saved or visited in several browsers appears once, with bookmarks ranked first. Leave the query empty to see what you visited last. Configure the Hotkey to search without typing the keyword.
+Search bookmarks and history of all your browsers via the `web` keyword. Chrome (every channel), Arc (pinned tabs and Favorites), Brave, Brave Origin, Edge, Vivaldi, Opera, Opera Air, Dia, Comet, Helium, ChatGPT Atlas, Yandex, Thorium, Firefox, Zen, LibreWolf, Floorp, Waterfox and Safari are found automatically, with all their profiles, including bookmarks saved to your Google Account and Safari profiles. A page saved or visited in several browsers appears once, with bookmarks ranked first. Leave the query empty to see what you visited last. Configure the Hotkey to search without typing the keyword.
 
 ![Searching bookmarks and history](images/web.png)
 
@@ -35,7 +35,7 @@ List every Chrome, Brave, Edge, Vivaldi, Firefox, Zen and other profile via the 
 
 ### Open Link In
 
-Open the current tab of the frontmost browser in another browser or profile via the `openin` keyword. When the frontmost app isn’t a browser, the copied link is used, or type one after the keyword.
+Open the current tab of the frontmost browser in another browser or profile via the `openin` keyword. When the frontmost app isn’t a browser, the copied link is used, or type one after the keyword. Every web browser on your Mac is offered, including ones Browser Hub doesn’t index, like Orion, DuckDuckGo, SigmaOS or Tor Browser: links open in them, but their bookmarks and history aren’t read.
 
 ![Opening the current tab in another browser](images/openin.png)
 
@@ -52,7 +52,7 @@ Browser Hub keeps a private index of your bookmarks and history in its cache fol
 
 ![Indexed browsers](images/browsers.png)
 
-Leave browsers or single profiles out of the index, stop indexing history, or choose how many history pages to keep in the Workflow’s Configuration. Every keyword can be changed there too.
+Leave browsers or single profiles out of the index, stop indexing history, or choose how many history pages to keep in the Workflow’s Configuration. Hide apps you never want to open links in, or also offer apps that take links but aren’t browsers, like download managers, in the Workflow’s Configuration too. Every keyword can be changed there as well.
 
 ## Development
 

@@ -148,6 +148,29 @@
         "required": false,
         "trim": true
       }
+    },
+    {
+      "type": "textfield",
+      "variable": "hidden_apps",
+      "label": "Don’t offer",
+      "description": "Apps to leave out of Open Link In and the browser list, by name or bundle id, separated by commas.",
+      "config": {
+        "default": "",
+        "placeholder": "Folx, com.example.app",
+        "required": false,
+        "trim": true
+      }
+    },
+    {
+      "type": "checkbox",
+      "variable": "link_apps",
+      "label": "Other apps",
+      "description": "Apps that register for web links but don’t open web pages, like download managers.",
+      "config": {
+        "default": false,
+        "required": false,
+        "text": "Also offer apps that take links but aren’t browsers"
+      }
     }
   ],
   "objects": [

@@ -766,7 +766,7 @@
 	<key>readme</key>
 	<string>## Usage
 
-Search bookmarks and history of all your browsers via the `web` keyword. Chrome (every channel), Arc (pinned tabs and Favorites), Brave, Edge, Vivaldi, Opera, Dia, Comet, Helium, ChatGPT Atlas, Firefox, Zen, LibreWolf, Floorp, Waterfox and Safari are found automatically, with all their profiles, including bookmarks saved to your Google Account and Safari profiles. A page saved or visited in several browsers appears once, with bookmarks ranked first. Leave the query empty to see what you visited last. Configure the Hotkey to search without typing the keyword.
+Search bookmarks and history of all your browsers via the `web` keyword. Chrome (every channel), Arc (pinned tabs and Favorites), Brave, Brave Origin, Edge, Vivaldi, Opera, Opera Air, Dia, Comet, Helium, ChatGPT Atlas, Yandex, Thorium, Firefox, Zen, LibreWolf, Floorp, Waterfox and Safari are found automatically, with all their profiles, including bookmarks saved to your Google Account and Safari profiles. A page saved or visited in several browsers appears once, with bookmarks ranked first. Leave the query empty to see what you visited last. Configure the Hotkey to search without typing the keyword.
 
 Type `@` to narrow the search to one browser or profile, like `web @chrome @work invoice` or `web @safari recipes`. Search only bookmarks via the `bmk` keyword, or only history via the `webh` keyword.
 
@@ -787,7 +787,7 @@ List every Chrome, Brave, Edge, Vivaldi, Firefox, Zen and other profile via the 
 
 ### Open Link In
 
-Open the current tab of the frontmost browser in another browser or profile via the `openin` keyword. When the frontmost app isn’t a browser, the copied link is used, or type one after the keyword.
+Open the current tab of the frontmost browser in another browser or profile via the `openin` keyword. When the frontmost app isn’t a browser, the copied link is used, or type one after the keyword. Every web browser on your Mac is offered, including ones Browser Hub doesn’t index, like Orion, DuckDuckGo, SigmaOS or Tor Browser: links open in them, but their bookmarks and history aren’t read.
 
 Alternatively, open a selected link via the Universal Action, or configure the Hotkey to send the current tab.
 
@@ -798,7 +798,7 @@ Alternatively, open a selected link via the Universal Action, or configure the H
 
 Browser Hub keeps a private index of your bookmarks and history in its cache folder and refreshes it in the background while you search. Browser databases are copied before they’re read, so they can be searched while the browsers are open, and nothing is ever sent anywhere. See what’s indexed, refresh it, or clear it via the `browsers` keyword.
 
-Leave browsers or single profiles out of the index, stop indexing history, or choose how many history pages to keep in the Workflow’s Configuration. Every keyword can be changed there too.
+Leave browsers or single profiles out of the index, stop indexing history, or choose how many history pages to keep in the Workflow’s Configuration. Hide apps you never want to open links in, or also offer apps that take links but aren’t browsers, like download managers, in the Workflow’s Configuration too. Every keyword can be changed there as well.
 </string>
 	<key>uidata</key>
 	<dict>
@@ -1113,6 +1113,46 @@ Leave browsers or single profiles out of the index, stop indexing history, or ch
 			<string>textfield</string>
 			<key>variable</key>
 			<string>excluded_browsers</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string>Folx, com.example.app</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Apps to leave out of Open Link In and the browser list, by name or bundle id, separated by commas.</string>
+			<key>label</key>
+			<string>Don’t offer</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>hidden_apps</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<false/>
+				<key>required</key>
+				<false/>
+				<key>text</key>
+				<string>Also offer apps that take links but aren’t browsers</string>
+			</dict>
+			<key>description</key>
+			<string>Apps that register for web links but don’t open web pages, like download managers.</string>
+			<key>label</key>
+			<string>Other apps</string>
+			<key>type</key>
+			<string>checkbox</string>
+			<key>variable</key>
+			<string>link_apps</string>
 		</dict>
 	</array>
 	<key>variables</key>

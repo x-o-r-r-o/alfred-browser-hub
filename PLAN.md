@@ -22,7 +22,7 @@ Raycast demand this workflow replaces (downloads, 2026-09-28):
 
 ## Features (v1.0)
 - [x] `web` searches bookmarks and history of every browser and profile at once; `bmk` bookmarks only; `webh` history only
-- [x] Chromium family: Chrome (stable, Beta, Dev, Canary), Chromium, Arc, Brave (+ Beta, Nightly), Edge (+ Beta, Dev, Canary), Vivaldi, Opera, Opera GX, Dia, Comet, Helium, ChatGPT Atlas — Bookmarks + AccountBookmarks JSON + History SQLite (copied first)
+- [x] Chromium family: Chrome (stable, Beta, Dev, Canary), Chromium (and ungoogled-chromium, same bundle and folder), Arc, Brave (+ Beta, Nightly), Brave Origin (+ Beta, Nightly), Edge (+ Beta, Dev, Canary), Vivaldi (+ Snapshot), Opera, Opera GX, Opera Air, Dia, Comet, Helium, ChatGPT Atlas, Thorium, Yandex — Bookmarks + AccountBookmarks JSON + History SQLite (copied first)
 - [x] Arc: pinned tabs of every space and Favorites from StorableSidebar.json (Arc keeps no bookmarks in Bookmarks), per profile
 - [x] Opera: `Default/` profile and side profiles (`_side_profiles/<id>`), older root layout too
 - [x] Firefox family: Firefox (+ Developer Edition, Nightly), Zen, LibreWolf, Floorp, Waterfox — places.sqlite with its WAL, full folder paths, tags and `place:` queries left out; Firefox 138+ profile groups (`Profile Groups/<StoreID>.sqlite`) opened with `--profile <folder>`
@@ -34,13 +34,15 @@ Raycast demand this workflow replaces (downloads, 2026-09-28):
 - [x] `prof` lists every Chromium and Firefox-family profile with name, account and picture; ↩ opens the browser in that profile, ⌘↩ opens a typed or copied URL in it, ⌥↩ a private window
 - [x] `openin` + Universal Action (URLs and text) + Hotkey: open the frontmost browser's current tab, the selected, typed or copied link in any installed browser or profile; ⌘↩ private window
 - [x] `browsers`: what's indexed per profile, access problems, Refresh the index, Clear the index
+- [x] Open-only browsers (links open in them, data never read): Orion (+ RC), Safari Technology Preview, SigmaOS, DuckDuckGo, Whale, Wavebox, Ghost Browser, Mullvad Browser, Tor Browser
+- [x] Every other installed app macOS registers for both http and https (`NSWorkspace URLsForApplicationsToOpenURL`, macOS 12+) is offered by `openin` and listed by `browsers` as open-only (no bookmarks, history or profiles); Alfred and this workflow are never listed. It counts as a web browser only when its Info.plist also opens HTML documents (`public.html`/`public.xhtml`, `.html`, or `text/html` in `CFBundleDocumentTypes` with a role other than None), the other half of what an app declares to be offered as the default browser. Apps that only take links (download managers such as Folx and PullTube) appear only with the “Other apps” checkbox. “Don’t offer” hides apps by name or bundle id. The scan (~3 ms) is cached in `apps.json` for 5 minutes; Refresh and Clear delete it
 - [x] Privacy: local only, no network at all; `/usr/bin/sqlite3 -readonly` on temp copies (deleted right after); exclude browsers or single profiles (`Chrome/Work`); history can be turned off; Clear the index deletes every copy
 
 ## Tech
 - JXA (`osascript -l JavaScript`) with the ObjC bridge; `/usr/bin/sqlite3` (ships with macOS) for the browsers' databases and the index; `/usr/bin/open` with argv for launching.
 - No runtime dependencies, no binaries, no network, no secrets.
 - Index files in `$alfred_workflow_cache`: `src-<key>.json` per profile, `index.sqlite` (merged, replaced atomically with rename(2)), `state.json`, `stamp`, `gen` (bumped by Clear so a running indexer discards its work), `index.lock` (mkdir lock with dead-owner check, 15 min backstop > 5 min indexer budget).
-- Test mode: `BH_TEST_ROOT` replaces the home folder for all browser data and turns off app lookups, AppleScript and `open`.
+- Test mode: `BH_TEST_ROOT` replaces the home folder for all browser data and turns off app lookups, AppleScript and `open`; `BH_TEST_URL_APPS` lists fixture `.app` bundles (inside the fixture root) in place of the http/https app scan.
 
 ## Known limitations
 - Safari needs Full Disk Access for Alfred (Apple protects ~/Library/Safari). Safari profiles are searched separately, but links always open in Safari’s current window: Safari has no command-line or AppleScript way to pick a profile (FB12320895).
@@ -72,11 +74,16 @@ Raycast demand this workflow replaces (downloads, 2026-09-28):
 - Favicons from the browsers' own favicon databases
 - Delete a history entry (would need writing to browser databases: deliberately left out of v1.0)
 - Orion (com.kagi.kagimacOS): `Orion/Defaults/favourites.plist` and the `history` SQLite; profiles are separate apps
-- Sidekick, Island, Whale, Ghost Browser once their data paths are confirmed
+- Index Whale, Wavebox, Ghost Browser once their data layouts are confirmed (open-only for now); Sidekick and Island are found by the generic app scan
 - Zen Essentials and pinned tabs (`zen-sessions.jsonlz4`, mozLz4: needs an LZ4 decoder in JXA)
 - Reuse a profile’s existing window instead of a new one (Raycast #24252; would need UI scripting)
 - Open Opera side profiles (`--side-profile-name`, documented only for Windows)
 - `-foreground` for Firefox launches, as Mozilla’s own launcher does
+
+## Bug fix: missing browsers (2026-09-28, user report)
+- [x] “Browser hub not showing all installed browsers”: Brave Origin (`com.brave.Browser.origin`, `BraveSoftware/Brave-Origin`) wasn't in the table. Added it with its Beta and Nightly (bundle ids and folders from Homebrew's brave-origin casks), Vivaldi Snapshot, Opera Air, Thorium (Alex313031's; not Thorium Reader), Yandex (profile folder from Yandex's help), the open-only browsers above, and the generic scan so an unknown browser is never missing from `openin` again
+- [x] Checked on this Mac by listing app bundles only (no browser data read): Brave Origin and Safari found from the table; Folx and PullTube found by the scan as link-only apps and hidden by default
+- [ ] Real Alfred: Brave Origin profiles in `prof`/`openin`, `--incognito` and `--profile-directory` with Brave Origin
 
 ## Audits (v1.0.0, before release)
 - [x] Pass 1: selected text around a link no longer filters every browser away; `localhost` opens as http; leftovers of killed index builds pruned; `@browser @` suggests only that browser's profiles; profiles whose names have no letters get a usable `@` token; Firefox folder recursion depth-limited; long queries capped at 12 words

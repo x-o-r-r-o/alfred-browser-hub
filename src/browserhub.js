@@ -81,23 +81,46 @@ const BROWSERS = [
   { id: "brave", name: "Brave Browser", short: "Brave", family: "chromium", bundles: ["com.brave.Browser"], dir: AS + "BraveSoftware/Brave-Browser", private: "--incognito" },
   { id: "bravebeta", name: "Brave Browser Beta", short: "Brave Beta", family: "chromium", bundles: ["com.brave.Browser.beta"], dir: AS + "BraveSoftware/Brave-Browser-Beta", private: "--incognito" },
   { id: "bravenightly", name: "Brave Browser Nightly", short: "Brave Nightly", family: "chromium", bundles: ["com.brave.Browser.nightly"], dir: AS + "BraveSoftware/Brave-Browser-Nightly", private: "--incognito" },
+  // Brave Origin (bundle ids and data folders from Homebrew's brave-origin casks; same layout as Brave)
+  { id: "braveorigin", name: "Brave Origin", short: "Brave Origin", family: "chromium", bundles: ["com.brave.Browser.origin"], dir: AS + "BraveSoftware/Brave-Origin", private: "--incognito" },
+  { id: "braveoriginbeta", name: "Brave Origin Beta", short: "Brave Origin Beta", family: "chromium", bundles: ["com.brave.Browser.origin.beta"], dir: AS + "BraveSoftware/Brave-Origin-Beta", private: "--incognito" },
+  { id: "braveoriginnightly", name: "Brave Origin Nightly", short: "Brave Origin Nightly", family: "chromium", bundles: ["com.brave.Browser.origin.nightly"], dir: AS + "BraveSoftware/Brave-Origin-Nightly", private: "--incognito" },
   { id: "edge", name: "Microsoft Edge", short: "Edge", family: "chromium", bundles: ["com.microsoft.edgemac"], dir: AS + "Microsoft Edge", private: "--inprivate" },
   { id: "edgebeta", name: "Microsoft Edge Beta", short: "Edge Beta", family: "chromium", bundles: ["com.microsoft.edgemac.Beta"], dir: AS + "Microsoft Edge Beta", private: "--inprivate" },
   { id: "edgedev", name: "Microsoft Edge Dev", short: "Edge Dev", family: "chromium", bundles: ["com.microsoft.edgemac.Dev"], dir: AS + "Microsoft Edge Dev", private: "--inprivate" },
   { id: "edgecanary", name: "Microsoft Edge Canary", short: "Edge Canary", family: "chromium", bundles: ["com.microsoft.edgemac.Canary"], dir: AS + "Microsoft Edge Canary", private: "--inprivate" },
   { id: "vivaldi", name: "Vivaldi", short: "Vivaldi", family: "chromium", bundles: ["com.vivaldi.Vivaldi"], dir: AS + "Vivaldi", private: "--incognito" },
+  { id: "vivaldisnapshot", name: "Vivaldi Snapshot", short: "Vivaldi Snapshot", family: "chromium", bundles: ["com.vivaldi.Vivaldi.snapshot"], dir: AS + "Vivaldi Snapshot", private: "--incognito" },
   { id: "opera", name: "Opera", short: "Opera", family: "chromium", bundles: ["com.operasoftware.Opera"], dir: AS + "com.operasoftware.Opera", private: "--private", profileFlag: false },
   { id: "operagx", name: "Opera GX", short: "Opera GX", family: "chromium", bundles: ["com.operasoftware.OperaGX"], dir: AS + "com.operasoftware.OperaGX", private: "--private", profileFlag: false },
+  { id: "operaair", name: "Opera Air", short: "Opera Air", family: "chromium", bundles: ["com.operasoftware.OperaAir"], dir: AS + "com.operasoftware.OperaAir", private: "--private", profileFlag: false },
   { id: "dia", name: "Dia", short: "Dia", family: "chromium", bundles: ["company.thebrowser.dia"], dir: AS + "Dia/User Data", private: "--incognito" },
   { id: "comet", name: "Comet", short: "Comet", family: "chromium", bundles: ["ai.perplexity.comet"], dir: AS + "Comet", private: "--incognito" },
   { id: "helium", name: "Helium", short: "Helium", family: "chromium", bundles: ["net.imput.helium"], dir: AS + "net.imput.helium", private: "--incognito" },
   { id: "atlas", name: "ChatGPT Atlas", short: "Atlas", family: "chromium", bundles: ["com.openai.atlas"], dir: AS + "com.openai.atlas/browser-data/host", private: "--incognito" },
+  // Thorium (Alex313031's Chromium fork; not EDRLab's Thorium Reader) and Yandex (profile folder
+  // documented at yandex.com/support/browser/en/personalization/profile)
+  { id: "thorium", name: "Thorium", short: "Thorium", family: "chromium", bundles: ["org.chromium.Thorium"], dir: AS + "Thorium", private: "--incognito" },
+  { id: "yandex", name: "Yandex Browser", short: "Yandex", family: "chromium", bundles: ["ru.yandex.desktop.yandex-browser"], dir: AS + "Yandex/YandexBrowser", private: "--incognito" },
   { id: "firefox", name: "Firefox", short: "Firefox", family: "firefox", bundles: ["org.mozilla.firefox", "org.mozilla.firefoxdeveloperedition", "org.mozilla.nightly"], dir: AS + "Firefox", private: "-private-window" },
   { id: "zen", name: "Zen", short: "Zen", family: "firefox", bundles: ["app.zen-browser.zen"], dir: AS + "zen", private: "-private-window" },
   { id: "librewolf", name: "LibreWolf", short: "LibreWolf", family: "firefox", bundles: ["org.mozilla.librewolf", "io.gitlab.librewolf-community.librewolf", "net.librewolf.librewolf", "io.gitlab.librewolf-community"], dir: AS + "librewolf", private: "-private-window" },
   { id: "floorp", name: "Floorp", short: "Floorp", family: "firefox", bundles: ["one.ablaze.floorp", "org.mozilla.floorp"], dir: AS + "Floorp", private: "-private-window" },
   { id: "waterfox", name: "Waterfox", short: "Waterfox", family: "firefox", bundles: ["net.waterfox.waterfox"], dir: AS + "Waterfox", private: "-private-window" },
   { id: "safari", name: "Safari", short: "Safari", family: "safari", bundles: ["com.apple.Safari"], dir: "Library/Safari", private: null },
+  // Open only (family "none"): links open in them, but their data isn't read: WebKit browsers with
+  // their own formats (Orion, SigmaOS, DuckDuckGo, Safari Technology Preview), browsers whose data
+  // layout isn't confirmed (Whale, Wavebox, Ghost Browser), and Tor and Mullvad Browser, whose data
+  // is never read on purpose. Any other app that opens web pages is found by appScan().
+  { id: "orion", name: "Orion", short: "Orion", family: "none", bundles: ["com.kagi.kagimacOS", "com.kagi.kagimacOS.RC"], private: null },
+  { id: "safaritp", name: "Safari Technology Preview", short: "Safari TP", family: "none", bundles: ["com.apple.SafariTechnologyPreview"], private: null },
+  { id: "sigmaos", name: "SigmaOS", short: "SigmaOS", family: "none", bundles: ["com.sigmaos.sigmaos.macos"], private: null },
+  { id: "duckduckgo", name: "DuckDuckGo", short: "DuckDuckGo", family: "none", bundles: ["com.duckduckgo.macos.browser"], private: null },
+  { id: "whale", name: "Whale", short: "Whale", family: "none", bundles: ["com.naver.Whale"], private: null },
+  { id: "wavebox", name: "Wavebox", short: "Wavebox", family: "none", bundles: ["com.bookry.wavebox"], private: null },
+  { id: "ghost", name: "Ghost Browser", short: "Ghost", family: "none", bundles: ["com.ghostbrowser.gb1"], private: null },
+  { id: "mullvad", name: "Mullvad Browser", short: "Mullvad", family: "none", bundles: ["net.mullvad.mullvadbrowser"], private: null },
+  { id: "tor", name: "Tor Browser", short: "Tor", family: "none", bundles: ["org.torproject.torbrowser"], private: null },
 ];
 const BROWSER_BY_ID = new Map(BROWSERS.map((b) => [b.id, b]));
 const SQLITE = "/usr/bin/sqlite3";
@@ -128,6 +151,8 @@ function config() {
     history: flag("index_history", true),
     historyLimit: limit,
     openWith: choice("open_with", ["source", "default"], "source"),
+    hidden: splitList(env("hidden_apps", "")),
+    linkApps: flag("link_apps", false),
   };
 }
 function keyword(name, fallback) {
@@ -500,6 +525,98 @@ function defaultBrowserBundle() {
   return b.isNil() || b.bundleIdentifier.isNil() ? "" : b.bundleIdentifier.js;
 }
 
+// ---------- other apps that open web links ----------
+// Every app macOS registers for both http and https links (NSWorkspace, macOS 12+) that isn't in
+// BROWSERS is offered by `openin` and listed by `browsers` as "open only": no bookmarks, history or
+// profiles. Download managers and the like (Folx, PullTube…) register for http(s) links too, so an
+// app counts as a web browser only when it also opens HTML documents (public.html / public.xhtml,
+// .html or text/html in CFBundleDocumentTypes), which is the other half of what an app declares to
+// be offered as the default web browser. The rest ("link apps") appear only when the Workflow's
+// Configuration asks for them. The scan takes a few ms and is cached for APP_SCAN_TTL.
+
+const APP_SCAN_TTL = 300; // seconds
+const APP_SCAN_VERSION = 1;
+const NEVER_LIST = /^(com\.runningwithcrayons\.alfred(-preferences)?|io\.github\.x-o-r-r-o\..*)$/i;
+function knownBundle(bundle) {
+  const b = String(bundle).toLowerCase();
+  return BROWSERS.some((x) => x.bundles.some((y) => y.toLowerCase() === b));
+}
+// Does an app's Info.plist say it opens web pages (HTML documents)?
+function opensPages(infoDict) {
+  const types = Array.isArray(infoDict.CFBundleDocumentTypes) ? infoDict.CFBundleDocumentTypes : [];
+  for (const t of types) {
+    if (!t || typeof t !== "object" || t.CFBundleTypeRole === "None") continue;
+    const utis = Array.isArray(t.LSItemContentTypes) ? t.LSItemContentTypes : [];
+    const exts = Array.isArray(t.CFBundleTypeExtensions) ? t.CFBundleTypeExtensions : [];
+    const mimes = Array.isArray(t.CFBundleTypeMIMETypes) ? t.CFBundleTypeMIMETypes : [];
+    if (utis.some((u) => /^public\.x?html$/i.test(String(u)))) return true;
+    if (exts.some((e) => /^x?html?$/i.test(String(e)))) return true;
+    if (mimes.some((m) => /^(text\/html|application\/xhtml\+xml)$/i.test(String(m)))) return true;
+  }
+  return false;
+}
+// Paths of the apps registered for a URL (tests: BH_TEST_URL_APPS, .app folders in the fixture root)
+function urlHandlers(url) {
+  if (isTest()) return splitList(env("BH_TEST_URL_APPS", "")).filter((p) => allowedPath(p));
+  const arr = $.NSWorkspace.sharedWorkspace.URLsForApplicationsToOpenURL($.NSURL.URLWithString(url));
+  const out = [];
+  if (arr.isNil()) return out;
+  for (let i = 0; i < arr.count; i++) {
+    const u = arr.objectAtIndex(i);
+    if (!u.isNil() && !u.path.isNil()) out.push(u.path.js);
+  }
+  return out;
+}
+function scanApps() {
+  const https = urlHandlers("https://example.com");
+  const http = new Set(isTest() ? https : urlHandlers("http://example.com"));
+  const apps = [], seen = new Set();
+  for (const path of https) {
+    if (!http.has(path) || !/\.app\/?$/i.test(path) || /\/\.Trash(es)?\//.test(path)) continue;
+    const d = $.NSDictionary.dictionaryWithContentsOfFile(`${path}/Contents/Info.plist`);
+    const infoDict = d.isNil() ? null : ObjC.deepUnwrap(d);
+    if (!infoDict || typeof infoDict.CFBundleIdentifier !== "string") continue;
+    const bundle = infoDict.CFBundleIdentifier.trim();
+    if (!/^[A-Za-z0-9.\-_]{1,200}$/.test(bundle) || seen.has(bundle.toLowerCase())) continue;
+    seen.add(bundle.toLowerCase());
+    if (NEVER_LIST.test(bundle) || knownBundle(bundle)) continue;
+    const name = oneLine(FM.displayNameAtPath(path).js.replace(/\.app$/i, "")).trim() || bundle;
+    apps.push({ bundle, path, name, pages: opensPages(infoDict) });
+  }
+  apps.sort((a, b) => a.name.localeCompare(b.name));
+  return apps;
+}
+let APP_SCAN = null;
+// Every other app that opens web links: [{ bundle, path, name, pages }], cached in the cache folder
+function otherApps() {
+  if (APP_SCAN) return APP_SCAN;
+  const file = `${cacheDir()}/apps.json`;
+  const sig = isTest() ? env("BH_TEST_URL_APPS", "") : "";
+  const c = readJSON(file);
+  if (c && c.v === APP_SCAN_VERSION && c.sig === sig && Array.isArray(c.apps) && Math.abs(now() - Number(c.t)) < APP_SCAN_TTL) {
+    APP_SCAN = c.apps.filter((a) => a && typeof a.bundle === "string" && typeof a.path === "string" && typeof a.name === "string");
+  } else {
+    APP_SCAN = scanApps();
+    writeFile(file, JSON.stringify({ v: APP_SCAN_VERSION, t: now(), sig, apps: APP_SCAN }));
+  }
+  return APP_SCAN;
+}
+// A pseudo browser for one of them (bh_browser "app:<bundle id>")
+function appBrowser(a) {
+  return { id: `app:${a.bundle}`, name: a.name, short: a.name, family: "none", bundles: [a.bundle], private: null, other: true, pages: a.pages };
+}
+// The other apps to offer: web browsers, plus link apps when the configuration asks for them
+function otherBrowsers(cfg) {
+  return otherApps().filter((a) => a.pages || cfg.linkApps).map((a) => ({ b: appBrowser(a), inst: { bundle: a.bundle, path: a.path } }));
+}
+// Hidden in the Workflow's Configuration, by name ("Folx"), short name or bundle id
+function isHidden(b, bundle, cfg) {
+  if (!cfg.hidden.length) return false;
+  const names = [squash(b.name), squash(b.short), b.other ? "" : b.id].filter(Boolean);
+  const ids = [bundle, ...b.bundles].map((x) => String(x).toLowerCase());
+  return cfg.hidden.some((h) => names.includes(squash(h)) || ids.includes(h.toLowerCase()));
+}
+
 // ---------- profiles ----------
 // A source is one profile of one browser:
 // { key, browser, dir, profileId, name, email, avatar, isDefault, launchable, launchPath,
@@ -545,7 +662,7 @@ function chromiumProfiles(b, root) {
   }
   // Opera's side profiles: _side_profiles/<id>/ (or …/<id>/Default/). Indexed, but like Arc's
   // profiles they can't be opened from outside the browser, so `prof` and `openin` don't offer them.
-  if (b.id === "opera" || b.id === "operagx") {
+  if (b.id === "opera" || b.id === "operagx" || b.id === "operaair") {
     let n = 0;
     for (const id of listDir(`${root}/_side_profiles`).sort()) {
       const base = `${root}/_side_profiles/${id}`;
@@ -682,6 +799,7 @@ function discover() {
   if (DISCOVERED) return DISCOVERED;
   const out = [];
   for (const b of BROWSERS) {
+    if (b.family === "none" || !b.dir) continue; // open only: its data is never read
     const root = `${ROOT}/${b.dir}`;
     if (!allowedPath(root) || !isDir(root)) continue;
     let list = [];
@@ -1210,7 +1328,7 @@ function runIndexer(force) {
 function clearIndex() {
   writeFile(`${cacheDir()}/gen`, String(Date.now()) + "-" + PID);
   for (const name of listDir(cacheDir())) {
-    if (/^(src-[0-9a-f]{8}\.json|index\.sqlite.*|index\.tmp-.*|state\.json|stamp|tmp-\d+-\d+|index-error\.txt|safari-profiles\.json)$/.test(name)) removeFile(`${cacheDir()}/${name}`);
+    if (/^(src-[0-9a-f]{8}\.json|index\.sqlite.*|index\.tmp-.*|state\.json|stamp|tmp-\d+-\d+|index-error\.txt|safari-profiles\.json|apps\.json)$/.test(name)) removeFile(`${cacheDir()}/${name}`);
   }
 }
 
@@ -1360,7 +1478,7 @@ function searchItems(query, kind) {
   }
   const srcs = stateSources(state).filter((s) => !isExcluded(s.browser.id, s.name, cfg));
   if (!state.sources.length || !srcs.length) {
-    const why = state.sources.length ? "Every browser is excluded in the Workflow’s Configuration" : "Chrome, Arc, Brave, Edge, Vivaldi, Opera, Dia, Comet, Helium, ChatGPT Atlas, Firefox, Zen, LibreWolf, Floorp and Safari are supported";
+    const why = state.sources.length ? "Every browser is excluded in the Workflow’s Configuration" : "Chrome, Arc, Brave, Edge, Vivaldi, Opera, Dia, Comet, Helium, ChatGPT Atlas, Yandex, Thorium, Firefox, Zen, LibreWolf, Floorp and Safari are supported";
     return { items: [info("No browser data found", why, "empty")] };
   }
   const q = parseQuery(query);
@@ -1504,7 +1622,7 @@ function frontURL() {
   if (app.isNil() || app.bundleIdentifier.isNil()) return { bundle: "", url: "" };
   const bundle = app.bundleIdentifier.js;
   const b = BROWSERS.find((x) => x.bundles.includes(bundle));
-  if (!b || b.family === "firefox") return { bundle, url: "" };
+  if (!b || b.family === "firefox" || b.family === "none") return { bundle, url: "" };
   const script = b.family === "safari"
     ? "function run(argv) { const a = Application(argv[0]); return a.documents.length ? a.documents[0].url() : ''; }"
     // Dia has its own dictionary (tabs with isFocused) rather than Chromium's activeTab
@@ -1536,17 +1654,22 @@ function openInItems(query) {
       if (url) from = "From the clipboard";
     }
   }
+  const cfg = config();
   const def = defaultBrowserBundle();
   const rows = [];
   for (const b of BROWSERS) {
     const inst = installed(b);
-    if (!inst) continue;
-    const profs = b.family === "safari" ? [] : discover().filter((s) => s.browser === b && s.launchable);
+    if (!inst || isHidden(b, inst.bundle, cfg)) continue;
+    const profs = b.family === "safari" || b.family === "none" ? [] : discover().filter((s) => s.browser === b && s.launchable);
     rows.push({ b, inst, prof: null, isDef: b.bundles.includes(def) });
     if (profs.length > 1) for (const p of profs) rows.push({ b, inst, prof: p, isDef: false });
   }
+  // any other app that opens web links (open only)
+  for (const o of otherBrowsers(cfg)) {
+    if (!isHidden(o.b, o.inst.bundle, cfg)) rows.push({ b: o.b, inst: o.inst, prof: null, isDef: o.inst.bundle === def });
+  }
   rows.sort((x, y) => (y.isDef ? 1 : 0) - (x.isDef ? 1 : 0));
-  let shown = rows.filter((r) => matchesWords([r.b.name, r.b.short, r.prof ? r.prof.name : "", r.prof ? r.prof.email : ""], words));
+  let shown = rows.filter((r) => matchesWords([r.b.name, r.b.short, r.prof ? r.prof.name : "", r.prof ? r.prof.email : "", r.b.other ? r.inst.bundle : ""], words));
   // text selected around a link ("see https://… today") isn't a filter
   if (!shown.length && typed) shown = rows;
   const items = [];
@@ -1557,7 +1680,7 @@ function openInItems(query) {
   for (const r of shown) {
     const base = { bh_browser: r.b.id, bh_profile: r.prof ? r.prof.profileId : "", bh_url: url };
     const title = r.prof ? `${r.b.short} · ${r.prof.name}` : r.b.name;
-    const sub = r.prof ? (r.prof.email || "Profile") : r.isDef ? "Default browser" : "";
+    const sub = r.prof ? (r.prof.email || "Profile") : r.isDef ? "Default browser" : r.b.other && !r.b.pages ? "Takes links (not a web browser)" : "";
     items.push({
       title: oneLine(title),
       subtitle: oneLine([sub, url ? "↩ Open the link here" : "↩ Open the browser"].filter(Boolean).join(" · ")),
@@ -1606,6 +1729,22 @@ function browserItems(query) {
     }
     if (!matchesWords([name, s.browser.short], words)) continue;
     items.push(Object.assign({ title: oneLine(name), subtitle: oneLine(sub), valid: false, icon: appIcon(s.browser, "browser") }, extra));
+  }
+  // installed browsers without indexed data: open-only ones, known ones with no data yet, other apps
+  const withData = new Set(discover().map((s) => s.browser.id));
+  const extra = [];
+  for (const b of BROWSERS) {
+    const inst = installed(b);
+    if (!inst || withData.has(b.id) || isHidden(b, inst.bundle, cfg)) continue;
+    extra.push({ b, inst, sub: b.family === "none" ? `Opens links via ${keyword("openin", "openin")} · its bookmarks and history aren’t read` : "No bookmarks or history found" });
+  }
+  for (const o of otherBrowsers(cfg)) {
+    if (isHidden(o.b, o.inst.bundle, cfg)) continue;
+    extra.push({ b: o.b, inst: o.inst, sub: `${o.b.pages ? "Opens links" : "Takes links"} via ${keyword("openin", "openin")} · ${o.inst.bundle} · nothing is indexed` });
+  }
+  for (const x of extra) {
+    if (!matchesWords([x.b.name, x.b.short, x.b.other ? x.inst.bundle : ""], words)) continue;
+    items.push({ title: oneLine(x.b.name), subtitle: oneLine(x.sub), valid: false, icon: { type: "fileicon", path: x.inst.path } });
   }
   if (!discover().length) items.push(info("No browser data found", "Supported: Chromium browsers, Firefox-based browsers and Safari", "empty"));
   items.push(info("Clear the index", "Delete the workflow’s copy of your bookmarks and history (it’s rebuilt at your next search)", "clear",
@@ -1670,11 +1809,20 @@ function doAction(arg) {
         if (!/^https?$/.test(schemeOf(url))) return openArgs(["-b", defaultBrowserBundle() || "com.apple.Safari", url]);
         return openArgs([url]);
       }
+      if (id.startsWith("app:")) {
+        // another app that opens web links: only an app the scan still lists, with the link only
+        const bundle = id.slice(4);
+        const a = otherApps().find((x) => x.bundle === bundle);
+        if (!a) return "Couldn’t open it: that app no longer opens web links";
+        if (action === "private") return `Couldn’t open ${a.name} in a private window`;
+        if (action === "open" && !url) return "Couldn’t open it: no link";
+        return openArgs(action === "launch" || !url ? ["-b", a.bundle] : ["-b", a.bundle, url]);
+      }
       const b = BROWSER_BY_ID.get(id);
       if (!b) return "Couldn’t open it: unknown browser";
       const inst = installed(b);
       if (!inst) return `Couldn’t open ${b.name}: it isn’t installed`;
-      const profile = b.family === "safari" ? "" : env("bh_profile", "");
+      const profile = b.family === "safari" || b.family === "none" ? "" : env("bh_profile", "");
       if (profile.startsWith("/") && (b.family !== "firefox" || !isDir(profile))) return `Couldn’t open ${b.name}: the profile folder is gone`;
       return openArgs(browserArgs(b, inst.bundle, profile, action === "launch" ? "" : url, action === "private"));
     }
@@ -1688,6 +1836,7 @@ function doAction(arg) {
     case "fda":
       return openSystemURL(FDA_URL);
     case "refresh": {
+      removeFile(`${cacheDir()}/apps.json`); // installed apps are scanned again too
       if (isTest()) {
         runIndexer(true);
         return "Refreshed the index";
