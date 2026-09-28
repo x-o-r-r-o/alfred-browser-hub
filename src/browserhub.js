@@ -14,13 +14,19 @@ function env(name, fallback) {
   const v = ENV.objectForKey(name);
   return v.isNil() ? fallback : v.js;
 }
+// A path from the environment (Alfred can pass it NFD-decomposed): NFC, like every path this
+// workflow turns into a key or a file name, so every run computes the same source keys
+function envPath(name, fallback) {
+  const v = env(name, fallback);
+  return typeof v === "string" ? v.normalize("NFC") : v;
+}
 const FM = $.NSFileManager.defaultManager;
 const BUNDLE = "io.github.x-o-r-r-o.browser-hub";
 const PID = $.NSProcessInfo.processInfo.processIdentifier;
 // Tests point BH_TEST_ROOT at a fixture tree: browser data is then read only from there, no real
 // app is detected or scripted, and nothing is opened (see isTest()).
-const TEST_ROOT = env("BH_TEST_ROOT", "");
-const ROOT = TEST_ROOT || $.NSHomeDirectory().js;
+const TEST_ROOT = envPath("BH_TEST_ROOT", "");
+const ROOT = (TEST_ROOT || $.NSHomeDirectory().js).normalize("NFC");
 function isTest() {
   return TEST_ROOT !== "";
 }
@@ -136,7 +142,7 @@ function mkdirs(dir) {
   return dir;
 }
 function cacheDir() {
-  return mkdirs(env("alfred_workflow_cache", "") || `${$.NSTemporaryDirectory().js}${BUNDLE}`);
+  return mkdirs(envPath("alfred_workflow_cache", "") || `${$.NSTemporaryDirectory().js}${BUNDLE}`);
 }
 function decode(data) {
   if (data.isNil()) return null;
@@ -237,10 +243,11 @@ function allowedPath(p) {
   if (!isTest()) return true;
   return inside(p, TEST_ROOT); // symlinks resolved: a fixture link can't lead out of the root
 }
-// "//", "." and ".." collapsed (stringByStandardizingPath would also drop "/private")
+// "//", "." and ".." collapsed (stringByStandardizingPath would also drop "/private"), in NFC (a folder
+// listing or an NFD variable gives "u" + U+0308 where profiles.ini or a typed path has "ü")
 function normPath(p) {
   const out = [];
-  for (const part of String(p).split("/")) {
+  for (const part of String(p).normalize("NFC").split("/")) {
     if (!part || part === ".") continue;
     if (part === "..") out.pop();
     else out.push(part);
@@ -376,6 +383,7 @@ function plural(n, one, many) {
 }
 // FNV-1a: a short, stable file-name-safe key
 function hashKey(s) {
+  s = String(s).normalize("NFC"); // one key for "ü" and "u" + U+0308
   let h = 0x811c9dc5;
   for (let i = 0; i < s.length; i++) {
     h ^= s.charCodeAt(i);

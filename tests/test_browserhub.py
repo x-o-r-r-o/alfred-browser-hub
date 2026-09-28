@@ -784,6 +784,28 @@ class BrowsersTests(Base):
         self.assertIn("excluded", self.find(items, "Safari")["subtitle"])
         self.assertEqual(self.action("web @safari ", bh_action="search"), 'alfred "web @safari "')
 
+    def test_nfd_paths_share_keys(self):
+        # Alfred can pass paths NFD-decomposed ("u" + U+0308): the index built with one form must be
+        # found by a run with the other (and the other way round), for the root and the cache folder
+        import unicodedata
+        nfd_root, nfd_cache = unicodedata.normalize("NFD", self.root), unicodedata.normalize("NFD", self.cache)
+        self.assertNotEqual(nfd_root, self.root)
+        for build, show in [({}, {"BH_TEST_ROOT": nfd_root, "alfred_workflow_cache": nfd_cache}),
+                            ({"BH_TEST_ROOT": nfd_root, "alfred_workflow_cache": nfd_cache}, {})]:
+            shutil.rmtree(self.cache, ignore_errors=True)
+            self.index(**build)
+            items = self.sf("browsers", "", index=False, **show)["items"]
+            c = self.find(items, "Google Chrome · Personal")
+            self.assertIn("3 bookmarks", c["subtitle"], (build, show))
+            self.assertNotIn("Not indexed yet", " ".join(i["subtitle"] for i in items))
+            self.assertIn("Daily News", [i["title"] for i in self.sf("web", "daily", index=False, **show)["items"]])
+            # a Firefox profile path from profiles.ini (NFC) and the listed folder give one key, not two
+            state = load_json(os.path.join(self.cache, "state.json"))
+            keys = [x["key"] for x in state["sources"]]
+            self.assertEqual(len(keys), len(set(keys)))
+        # the NFD root can't slip past the test guard either
+        self.assertEqual(self.js(["browsers", ""], BH_TEST_ROOT=unicodedata.normalize("NFD", os.path.join(self.tmp, "missing ü"))).count("isn’t a folder"), 1)
+
     def test_copy_and_fda_actions(self):
         self.assertIsNone(self.action_or_none("[a](b)", bh_action="copy"))
         self.assertEqual(read_pasteboard(), "[a](b)")

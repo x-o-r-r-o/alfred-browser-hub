@@ -64,7 +64,8 @@ Raycast demand this workflow replaces (downloads, 2026-09-28):
 - [ ] Session variables `bh_front_url` come back on the next keystroke (no second Automation call while filtering)
 - [ ] The Universal Action appears for URLs in Alfred's results and for selected text (checked for a URL passed to Alfred’s `action` command; opens `openin` with the typed link)
 - [ ] Rerun "Indexing your browsers…" swaps to results on a fresh install with large histories
-- [ ] Screenshots: `web`, `@` filter, `prof`, `openin`, the Universal Action, `browsers` (all but `prof` taken with the test fixture and only Safari installed; `prof` needs installed Chrome/Firefox for real icons)
+- [x] Screenshots: `web`, `@` filter, `prof`, `openin`, the Universal Action, `browsers` (taken with the test fixture; `prof` shows three demo Brave profiles, with the installed Brave Origin.app as the icon source only)
+- [x] Paths in NFC everywhere they become keys (source keys, cache folder, fixture root): an NFD path from Alfred no longer leaves `browsers` saying “Not indexed yet” after an index built with the NFC form (checked in real Alfred 2026-09-28)
 
 ## Ideas for v1.1
 - Open tabs search (Chromium via AppleScript, Safari)
