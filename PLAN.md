@@ -62,9 +62,9 @@ Raycast demand this workflow replaces (downloads, 2026-09-28):
 - [ ] Dia’s current tab is read by `openin` (Dia’s own dictionary, `isFocused`)
 - [ ] `openin` reads the current tab of Chrome, Arc, Brave, Edge and Safari (Automation prompt), and `menuBarOwningApplication` is the browser behind Alfred's window
 - [ ] Session variables `bh_front_url` come back on the next keystroke (no second Automation call while filtering)
-- [ ] The Universal Action appears for URLs in Alfred's results and for selected text
+- [ ] The Universal Action appears for URLs in Alfred's results and for selected text (checked for a URL passed to Alfred’s `action` command; opens `openin` with the typed link)
 - [ ] Rerun "Indexing your browsers…" swaps to results on a fresh install with large histories
-- [ ] Screenshots: `web`, `@` filter, `prof`, `openin`, the Universal Action, `browsers`
+- [ ] Screenshots: `web`, `@` filter, `prof`, `openin`, the Universal Action, `browsers` (all but `prof` taken with the test fixture and only Safari installed; `prof` needs installed Chrome/Firefox for real icons)
 
 ## Ideas for v1.1
 - Open tabs search (Chromium via AppleScript, Safari)
